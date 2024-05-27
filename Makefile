@@ -1,4 +1,4 @@
-CXXFLAGS := -Wall -O2 -g
+CXXFLAGS := -std=c++20 -Wall -O0 -g
 
 all: pma
 
