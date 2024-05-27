@@ -65,7 +65,7 @@ public:
         std::cout << std::endl;
     }
 
-    // To rebalance, we need to know t
+    // TODO: review this implementation, it doesn't seem to be the best way to do it
     void rebalance(uint64_t left, uint64_t right) {
         // count gaps and non-gaps
         // [ _ _ 3 4 5 _ _ _ _ _ ]
@@ -102,18 +102,20 @@ public:
         double step = static_cast<double>(segmentSize - 1) / (numElements - 1);
         std::cout << "Rebalancing Step: " << step << std::endl;
 
-        for (uint64_t i = 0; i < segmentSize; i++) {
+        // clear the segment
+        for (uint64_t i = left; i < right; i++) {
             data[i] = std::nullopt;
         }
 
         for (uint64_t i = 0; i < numElements; i++) {
-            data[std::round(i * step)] = segmentElements[i];
+            data[std::round(i * step) + left] = segmentElements[i];
         }
     }
 
     void insert(int value) {
         // guard against zero capacity
         if (capacity == 0) return;
+        bool fullRebalance = false;
 
         uint64_t left = 0;
         uint64_t right = capacity - 1;
@@ -204,6 +206,9 @@ public:
             capacity *= 2;
             data.resize(capacity, std::nullopt);
 
+            // data resized, set to trigger rebalance
+            fullRebalance = true;
+
             // search for gaps again
             nearestRight = mid;
             nearestLeft = INT64_MIN;
@@ -224,7 +229,6 @@ public:
         std::cout << "mid - nearestLeft: " << mid - nearestLeft << " nearestRight - mid: " << nearestRight - mid << std::endl;
         std::cout << "nearestLeft: " << nearestLeft << " nearestRight: " << nearestRight << std::endl;
         std::cout << "Neareast gap found at: " << nearestGap << std::endl;
-
         
         // 'mid' is where we want the element to be placed
         // if nearestGap is greater than mid, shift right
@@ -256,12 +260,14 @@ public:
 
         // insert the value into mid position
         data[mid] = value;
+        if (fullRebalance) {
+            rebalance(0, capacity - 1);
+        }
         std::cout << std::endl;
     }
 };
 
 void fixedInsert(PackedMemoryArray& sv) {
-
     // 2 3 5 6 10 11 15 44 77 665 724 1554 1766 3151 4547 _ _ 3794
     // 2 3 5 6 10 11 15 44 77 665 724 1554 1766 3151 4547 _ _ 3794 6463 8949 9896 _ _ _
 
@@ -294,7 +300,7 @@ void distInsert(PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 10000);
 
     int count = 0;
-    while (count < 16) {
+    while (count < 10) {
         int num = distr(eng);
         pma.insert(num);
         pma.print();
@@ -327,8 +333,8 @@ int main() {
     pma.print();
     distInsert(pma);
 
-    pma.print();
-    pma.rebalance(0, pma.capacity - 1);
+    // pma.rebalance(0, pma.capacity - 1);
+    pma.rebalance(0, 24);
     pma.print();
 
     pma.checkIfSorted();
