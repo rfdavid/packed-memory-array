@@ -13,6 +13,7 @@
 #include <vector>
 #include <optional>
 #include <random>
+#include <cmath>
 
 class PackedMemoryArray {
 public:
@@ -23,40 +24,7 @@ public:
 
     PackedMemoryArray(uint64_t segmentSize) : segmentSize(segmentSize), capacity(segmentSize) {
         data = std::vector<std::optional<int>>(segmentSize, std::nullopt);
- //       levels = std::vector<std::vector<segmentMetadata>>(1, std::vector<segmentMetadata>(1, segmentMetadata{segmentSize, 0}));
     }
-
-//    struct segmentMetadata {
-//        uint64_t gaps;
-//        uint64_t elements;
-//    };
-
-    // segment metadata for each segment, divided by levels
-    //    std::vector<std::vector<segmentMetadata>> levels;
-    //    void traverseTreeFromValue(lambda operation) {} 
-
-
- //   void printLevelsInformation() {
- //       for (uint64_t i = 0; i < levels.size(); i++) {
- //           std::cout << "Level: " << i << std::endl;
- //           for (uint64_t j = 0; j < levels[i].size(); j++) {
- //               std::cout << "Segment: " << j << " Gaps: " << levels[i][j].gaps << " Elements: " << levels[i][j].elements << std::endl;
- //           }
- //       }
- //   }
-    
-
-    // calcualte and check thresholds once a segment is full
-//    getSegmentRangeByValueAndLevel(int value, int level) {}
-
-    // density at a top level
-    // elements / total size
-
-    //  |                                     x                                      |
-    //  |                 x                   |                   x                  |
-    //  |      1      |           2           |       3           |        4         |
-    //   2 3 5 6 10 11 15 44 77 1554 1766 3151 4547 _  _  _  _  _   _  _   _  _  _  _
-    //   0 1 2 3 4  5  6  7  8  9    10   11   12  13 14 15 16 17   18 19 20 21 22 23
 
     void checkIfSorted() {
         for (uint64_t i = 0; i < capacity - 1; i++) {
@@ -76,6 +44,25 @@ public:
             }
         }
         std::cout << std::endl << std::endl;
+    }
+
+    // lower threshold at level 1
+    static constexpr double p1 = 0.5;
+    // upper threshold at level 1
+    static constexpr double t1 = 1;
+    // lower threshold at top level h
+    static constexpr double ph = 0.75;
+    // upper threshold at top level h
+    static constexpr double th = 0.75;
+
+    double upperThresholdAtLevel(int level) {
+        int height = getTreeHeight();
+        return th + (t1 - th) * (height - level) / (height - 1);
+    }
+
+    double lowerThresholdAtLevel(int level) {
+        int height = getTreeHeight();
+        return ph - (ph - p1) * (height - level) / (height - 1);
     }
 
     // TODO: review this implementation, it doesn't seem to be the best way to do it
@@ -179,43 +166,60 @@ public:
         return mid;
     }
 
+    int getTreeHeight() {
+        int noOfSegments = capacity / segmentSize;
+        int height = log2(capacity/noOfSegments) + 1;
+        return height;
+    }
+
     // calculate density of the segment
-    // based on value, get the range from the bottom segment
-    // get logical segment id = value / segmentSize
-    // range of the upper level = range of segment + neighbor (left if segment id is even, right otherwise)
     // check thresholds, starting from the index value
-    void checkThresholds(int index, uint16_t limit) {
+    // return true if the segment is balanced
+    // return false if the segment is not balanced, and set the segmentLeft, segmentRight
+    bool checkThresholds(int index, uint16_t limit, int &sLeft, int &sRight) {
         // let level 0 be the bottom level
-        int level = 0;
+        int level = 1;
         int levelMultipler = 1;
         // get initial offsets
         int segmentLeft = index - (index % segmentSize);
         int segmentRight = segmentLeft + segmentSize;
 
-        // get the segment id
+        std::cout << "Logical tree height: " << limit << std::endl;
 
-        // bottom segment
-        // ...
-        
-        while(level < limit) {
-            uint64_t segmentId = (index / (segmentSize * levelMultipler)) + 1;
+        while(level <= limit) {
+            uint64_t segmentPos = (index / (segmentSize * levelMultipler)) + 1;
 
             // calculate the density
+            // TODO: don't need to go over the whole upper segment
+            // only count the neighbor segment and sum up
             int segmentElements = 0;
             for (uint64_t i = segmentLeft; i < segmentRight; i++) {
-                if (data[i]) segmentElements++;
+                if (data[i]) {
+                    segmentElements++;
+                }
             }
+            std::cout << "Segment elements: " << segmentElements << std::endl;
+            std::cout << "Segment size: " << segmentSize*levelMultipler << std::endl;
             double density = static_cast<double>(segmentElements) / (segmentSize*levelMultipler);
 
-            std::cout << "Level: " << level << ", Density: " << density << ", Segment ID " << segmentId << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
+            double upperThreshold = upperThresholdAtLevel(level);
+            double lowerThreshold = lowerThresholdAtLevel(level);
 
-            if (segmentSize*levelMultipler >= capacity) {
-                std::cout << "Max level reached at: " << level << std::endl;
-                break;
+            std::cout << "Level: " << level << ", Density: " << density << ", Segment Pos: " << segmentPos << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
+            std::cout << "Upper Threshold: " << upperThreshold << ", Lower Threshold: " << lowerThreshold << std::endl;
+
+            // upper segment is violated? 
+            if (density > upperThreshold) {
+                std::cout << "Segment is violated" << std::endl;
+                sLeft = segmentLeft;
+                sRight = segmentRight;
+                return false;
             }
 
+            // TODO: lower segment is violated?
+
             // find the segment neighbor
-            if (segmentId % 2 == 0) {
+            if (segmentPos % 2 == 0) {
                 // even, left neighbor
                 segmentLeft -= segmentSize*levelMultipler;
             } else {
@@ -228,11 +232,39 @@ public:
             // this is necessary to expand the range of the segment
             levelMultipler *= 2;
         }
+
+        return true;
+    }
+
+    void checkForRebalancing(int index) {
+        bool isBalanced = false;
+        int segmentLeft = 0;
+        int segmentRight = 0;
+        int limit = 2;
+        int treeHeight = getTreeHeight();
+
+        std::cout << "Checking for rebalancing" << std::endl;
+        std::cout << "Tree height: " << treeHeight << std::endl;
+        std::cout << "Limit: " << limit << std::endl;
+        while (!isBalanced && limit < treeHeight) {
+            isBalanced = checkThresholds(index, limit, segmentLeft, segmentRight);
+            limit++;
+            rebalance(segmentLeft, segmentRight);
+        }
+
+        // still not balanced, double the capacity
+        // and do a full rebalance
+        if (!isBalanced) {
+            capacity *= 2;
+            data.resize(capacity, std::nullopt);
+            rebalance(0, capacity - 1);
+        }
     }
 
     void insert(int value) {
         if (capacity == 0) return;
         bool fullRebalance = false;
+        bool partialRebalance = false;
 
         std::cout << "Value to insert: " << value << std::endl;
 
@@ -247,7 +279,6 @@ public:
         if (data[mid] == std::nullopt) {
             std::cout << "Inserting value: " << value << " at index: " << mid << std::endl;
             data[mid] = value;
-            checkThresholds(mid, UINT16_MAX);
             return;
         } 
 
@@ -270,7 +301,10 @@ public:
         }
         // no gaps in this segment. Is there any other segment? if not, double the capacity
         if (nearestGap == UINT64_MAX) {
+            // set this segment to partil rebalancing
+            partialRebalance = true;
             bool neighborGapAvailable = false;
+
             std::cout << "No gaps found in the segment" << std::endl;
             
             if (segmentRight < capacity) {
@@ -353,11 +387,12 @@ public:
 
         // insert the value into mid position
         data[mid] = value;
-        checkThresholds(mid, UINT16_MAX);
         if (fullRebalance) {
             rebalance(0, capacity - 1);
+        } else if (partialRebalance) {
+            rebalance(segmentLeft, segmentRight);
+            checkForRebalancing(mid);
         }
-
     }
 };
 
@@ -394,7 +429,7 @@ void distInsert(PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 10000);
 
     int count = 0;
-    while (count < 10) {
+    while (count < 100) {
         int num = distr(eng);
         pma.insert(num);
         pma.print();
