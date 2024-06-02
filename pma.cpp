@@ -177,7 +177,9 @@ public:
 
     int getTreeHeight() {
         int noOfSegments = capacity / segmentSize;
-        int height = log2(capacity/noOfSegments) + 1;
+        if (noOfSegments == 1) return 1;
+        int height = log2(noOfSegments) + 1;
+        DEBUG_PRINT << "CApacity: " << capacity << ", No of Segments: " << noOfSegments << ", Height: " << height << std::endl;
         return height;
     }
 
@@ -185,27 +187,37 @@ public:
     // TODO: store those values as in RMA
     void getSegmentOffset(int level, int index, uint64_t &segmentLeft, uint64_t &segmentRight) {
         int levelMultiplier = 1;
-        int segmentLeft = index - (index % segmentSize);
-        int segmentRight = segmentLeft + segmentSize;
+        segmentLeft = index - (index % segmentSize);
+        segmentRight = segmentLeft + segmentSize;
 
         for (int i = 1; i < level; i++) {
-            uint64_t segmentPos = (index / (segmentSize * levelMultipler)) + 1;
+            uint64_t segmentPos = (index / (segmentSize * levelMultiplier)) + 1;
             if (segmentPos % 2 == 0) {
                 // even, left neighbor
-                segmentLeft -= segmentSize*levelMultipler;
+                segmentLeft -= segmentSize*levelMultiplier;
             } else {
                 // odd, right neighbor
-                segmentRight += segmentSize*levelMultipler;
+                segmentRight += segmentSize*levelMultiplier;
             }
             levelMultiplier *= 2;
         }
+    }
+
+    double getDensity(uint64_t left, uint64_t right) {
+        int segmentElements = 0;
+        for (uint64_t i = left; i < right; i++) {
+            if (data[i]) {
+                segmentElements++;
+            }
+        }
+        return static_cast<double>(segmentElements) / (right - left);
     }
 
     // calculate density of the segment
     // check thresholds, starting from the index value
     // return true if the segment is balanced
     // return false if the segment is not balanced, and set the segmentLeft, segmentRight
-    bool checkThresholds(int index, int startLevel, uint16_t limit,  int &sLeft, int &sRight) {
+    bool checkThresholds(int index, int startLevel, uint16_t limit, uint64_t &sLeft, uint64_t &sRight) {
         // let level 0 be the bottom level
         int level = 1;
         int levelMultipler = 1;
@@ -267,8 +279,8 @@ public:
 
     void checkForRebalancing(int index) {
         bool isBalanced = false;
-        int segmentLeft = 0;
-        int segmentRight = 0;
+        uint64_t segmentLeft = 0;
+        uint64_t segmentRight = 0;
         int startLevel = 1;
         int treeHeight = getTreeHeight();
         int limit = treeHeight; // test
@@ -277,21 +289,50 @@ public:
         DEBUG_PRINT << "Tree height: " << treeHeight << std::endl;
         DEBUG_PRINT << "Limit: " << limit << std::endl;
 
-        while (!isBalanced && startLevel <= treeHeight) {
-            isBalanced = checkThresholds(index, startLevel, limit, segmentLeft, segmentRight);
-            limit++;
-            startLevel++;
-            rebalance(segmentLeft, segmentRight);
-        }
+        DEBUG_PRINT << "----------------------" << std::endl;
+        for (int level = 1; level <= treeHeight; level++) {
+            getSegmentOffset(level, index, segmentLeft, segmentRight);
+             double density = getDensity(segmentLeft, segmentRight);
+             double upperThreshold = upperThresholdAtLevel(level);
 
-        // still not balanced, double the capacity
-        // and do a full rebalance
-        if (!isBalanced) {
-            DEBUG_PRINT << "Doubling capacity and performing full rebalancing" << std::endl;
-            capacity *= 2;
-            data.resize(capacity, std::nullopt);
-            rebalance(0, capacity - 1);
+            DEBUG_PRINT << "Level: " << level << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
+            DEBUG_PRINT << "Density: " << density << std::endl;
+            DEBUG_PRINT << "Upper Threshold: " << upperThreshold << std::endl;
+
+            if (density > upperThreshold) {
+                DEBUG_PRINT << "Segment is not balanced" << std::endl;
+                // if level is root, double capacity and do full rebalancing
+                if (level == treeHeight) {
+                    capacity *= 2;
+                    data.resize(capacity, std::nullopt);
+                    rebalance(0, capacity - 1);
+                } else {
+                    // otherwise, rebalance one level up
+                    // TODO: we have to do this for level all over again to
+                    // make sure the calibrator tree is properly balanced
+                    getSegmentOffset(level+1, index, segmentLeft, segmentRight);
+                    rebalance(segmentLeft, segmentRight);
+                }
+            }
+
         }
+        DEBUG_PRINT << "----------------------" << std::endl;
+
+//        while (!isBalanced && startLevel <= treeHeight) {
+//            isBalanced = checkThresholds(index, startLevel, limit, segmentLeft, segmentRight);
+//            limit++;
+//            startLevel++;
+//            rebalance(segmentLeft, segmentRight);
+//        }
+//
+//        // still not balanced, double the capacity
+//        // and do a full rebalance
+//        if (!isBalanced) {
+//            DEBUG_PRINT << "Doubling capacity and performing full rebalancing" << std::endl;
+//            capacity *= 2;
+//            data.resize(capacity, std::nullopt);
+//            rebalance(0, capacity - 1);
+//        }
     }
 
     uint64_t findGapWithinSegment(uint64_t left, uint64_t right) {
@@ -353,7 +394,6 @@ public:
         if (nearestGap == UINT64_MAX) {
             // set this segment to partil rebalancing
             partialRebalance = true;
-            bool neighborGapAvailable = false;
 
             DEBUG_PRINT << "No gaps found in the segment" << std::endl;
 
@@ -374,6 +414,17 @@ public:
             if (nearestGap == UINT64_MAX) {
                 nearestGap = findGapAtRightNeighbor(segmentLeft, segmentRight);
             }
+            // full rebalance first
+            if (nearestGap == UINT64_MAX) {
+                rebalance(0, capacity - 1);
+            }
+            // now try the neighbors again
+            nearestGap = findGapAtLeftNeighbor(segmentLeft, segmentRight);
+            // not found, try the right neighbor
+            if (nearestGap == UINT64_MAX) {
+                nearestGap = findGapAtRightNeighbor(segmentLeft, segmentRight);
+            }
+
             // nothing? double the capacity
             if (nearestGap == UINT64_MAX) {
                 DEBUG_PRINT << "No gaps available, doubling the array" << std::endl;
@@ -434,33 +485,8 @@ public:
     }
 };
 
-void fixedInsert(PackedMemoryArray& sv) {
-    // 2 3 5 6 10 11 15 44 77 665 724 1554 1766 3151 4547 _ _ 3794
-    // 2 3 5 6 10 11 15 44 77 665 724 1554 1766 3151 4547 _ _ 3794 6463 8949 9896 _ _ _
-
-    sv.insert(2);
-    sv.insert(3);
-    sv.insert(5);
-    sv.insert(6);
-    sv.insert(10);
-    sv.insert(11);
-    sv.insert(15);
-    sv.insert(44);
-    sv.insert(77);
-    sv.insert(665);
-    sv.insert(724);
-    sv.insert(1554);
-    sv.insert(1766);
-    sv.insert(3151);
-    sv.insert(4547);
-    sv.insert(3794);
-    sv.print();
-}
-
 void distInsert(PackedMemoryArray& pma) {
-
     Timer t;
-    t.start();
 
     std::random_device rd;
 //    std::mt19937 eng(-1011927998);
@@ -470,12 +496,11 @@ void distInsert(PackedMemoryArray& pma) {
     std::mt19937 eng(seed);
     std::uniform_int_distribution<> distr(0, 10000);
 
-    int count = 0;
-    while (count < 50) {
-       // int num = distr(eng);
+    t.start();
+    for (int count = 0; count < 1000000; count++) {
+        // int num = distr(eng);
         pma.insert(count);
-        pma.print();
-        ++count;
+//        pma.print();
     }
 
     double time_taken = t.stop();
@@ -485,8 +510,6 @@ void distInsert(PackedMemoryArray& pma) {
 
 int main() {
     PackedMemoryArray pma(6);
-
-//    fixedInsert(pma);
 
 //    pma.insert(5);
 //    pma.print();
@@ -510,9 +533,9 @@ int main() {
 
     // pma.rebalance(0, pma.capacity - 1);
     //pma.rebalance(0, 24);
-    pma.print();
+ //   pma.print();
 
-    pma.checkIfSorted();
+//    pma.checkIfSorted();
  //   pma.printLevelsInformation();
 
     return 0;
@@ -521,5 +544,6 @@ int main() {
 
 // 2 3 5 6 10 11 15 44 77 1554 1766 3151 4547 _  _  _  _  _  _  _   _  _  _  _
 // 0 1 2 3 4  5  6  7  8  9    10   11   12   13 14 15 16 17 18 19 20 21 22 23
-//
-//
+
+//             x           x           x           x           x           x
+// 0 _ _ 1 _ _ _ 2 _ _ 3 _ _ _ 4 _ _ 5 _ _ _ 6 _ _ 7 _ _ _ 8 _ _ 9 _ _ _ 10 _ _ 11 _ _ _ 12 _ _ 13 _ _ 14 15 _ 16 17 _ 18 19 _ 20 21 _ 22 23 _ 24 25 _ 26 27 _ 28 29 _ 30 31 32 _ 33 34 _ 35 36 _ 37 38 _ 39 40 _ 41 42 43 44 45 46 47 48
