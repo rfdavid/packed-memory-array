@@ -1,9 +1,14 @@
-CXXFLAGS := -std=c++20 -Wall -O0 -g
+CXX = g++
+CXXFLAGS = -Wall -Wextra -std=c++20
 
+all: CXXFLAGS += -O2
 all: pma
 
+debug: CXXFLAGS += -O0 -g -DDEBUG
+debug: pma
+
 pma: pma.cpp
-	$(CXX) pma.cpp -o pma $(CXXFLAGS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean:
 	rm -f pma

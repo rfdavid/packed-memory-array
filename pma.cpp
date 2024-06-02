@@ -14,6 +14,14 @@
 #include <optional>
 #include <random>
 #include <cmath>
+#include "timer.hpp" // from reddragon
+
+#ifdef DEBUG
+#define DEBUG_PRINT std::cout
+#else
+#define DEBUG_PRINT if (false) std::cout
+#endif
+
 
 class PackedMemoryArray {
 public:
@@ -39,6 +47,7 @@ public:
         for (uint64_t i = 0; i < capacity; i++) {
             if (data[i].has_value()) {
                 std::cout << data[i].value() << " ";
+                // std::cout << "[" << i << "] => " << data[i].value() << " ";
             } else {
                 std::cout << "_ ";
             }
@@ -100,7 +109,7 @@ public:
         }
 
         double step = static_cast<double>(segmentSize - 1) / (numElements - 1);
-        std::cout << "Rebalancing Step: " << step << std::endl;
+        DEBUG_PRINT << "Rebalancing Step: " << step << " between " << left << " and " << right << std::endl;
 
         // clear the segment
         for (uint64_t i = left; i < right; i++) {
@@ -123,7 +132,7 @@ public:
 
             // value already exists, do nothing
             if (data[mid] && data[mid].value() == value) {
-                std::cout << "Value already exists" << std::endl;
+                DEBUG_PRINT << "Value already exists" << std::endl;
                 break;
             }
 
@@ -172,11 +181,31 @@ public:
         return height;
     }
 
+    // get the segment offset going from the bottom to the requested level
+    // TODO: store those values as in RMA
+    void getSegmentOffset(int level, int index, uint64_t &segmentLeft, uint64_t &segmentRight) {
+        int levelMultiplier = 1;
+        int segmentLeft = index - (index % segmentSize);
+        int segmentRight = segmentLeft + segmentSize;
+
+        for (int i = 1; i < level; i++) {
+            uint64_t segmentPos = (index / (segmentSize * levelMultipler)) + 1;
+            if (segmentPos % 2 == 0) {
+                // even, left neighbor
+                segmentLeft -= segmentSize*levelMultipler;
+            } else {
+                // odd, right neighbor
+                segmentRight += segmentSize*levelMultipler;
+            }
+            levelMultiplier *= 2;
+        }
+    }
+
     // calculate density of the segment
     // check thresholds, starting from the index value
     // return true if the segment is balanced
     // return false if the segment is not balanced, and set the segmentLeft, segmentRight
-    bool checkThresholds(int index, uint16_t limit, int &sLeft, int &sRight) {
+    bool checkThresholds(int index, int startLevel, uint16_t limit,  int &sLeft, int &sRight) {
         // let level 0 be the bottom level
         int level = 1;
         int levelMultipler = 1;
@@ -184,7 +213,7 @@ public:
         int segmentLeft = index - (index % segmentSize);
         int segmentRight = segmentLeft + segmentSize;
 
-        std::cout << "Logical tree height: " << limit << std::endl;
+        DEBUG_PRINT << "Logical tree height: " << limit << std::endl;
 
         while(level <= limit) {
             uint64_t segmentPos = (index / (segmentSize * levelMultipler)) + 1;
@@ -198,19 +227,19 @@ public:
                     segmentElements++;
                 }
             }
-            std::cout << "Segment elements: " << segmentElements << std::endl;
-            std::cout << "Segment size: " << segmentSize*levelMultipler << std::endl;
-            double density = static_cast<double>(segmentElements) / (segmentSize*levelMultipler);
+            DEBUG_PRINT << "Segment elements: " << segmentElements << std::endl;
+            DEBUG_PRINT << "Segment size: " << segmentSize*levelMultipler << std::endl;
 
+            double density = static_cast<double>(segmentElements) / (segmentSize*levelMultipler);
             double upperThreshold = upperThresholdAtLevel(level);
             double lowerThreshold = lowerThresholdAtLevel(level);
 
-            std::cout << "Level: " << level << ", Density: " << density << ", Segment Pos: " << segmentPos << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
-            std::cout << "Upper Threshold: " << upperThreshold << ", Lower Threshold: " << lowerThreshold << std::endl;
+            DEBUG_PRINT << "Level: " << level << ", Density: " << density << ", Segment Pos: " << segmentPos << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
+            DEBUG_PRINT << "Upper Threshold: " << upperThreshold << ", Lower Threshold: " << lowerThreshold << std::endl;
 
             // upper segment is violated? 
-            if (density > upperThreshold) {
-                std::cout << "Segment is violated" << std::endl;
+            if (level >= startLevel && density > upperThreshold) {
+                DEBUG_PRINT << "Segment is violated" << std::endl;
                 sLeft = segmentLeft;
                 sRight = segmentRight;
                 return false;
@@ -240,25 +269,52 @@ public:
         bool isBalanced = false;
         int segmentLeft = 0;
         int segmentRight = 0;
-        int limit = 2;
+        int startLevel = 1;
         int treeHeight = getTreeHeight();
+        int limit = treeHeight; // test
 
-        std::cout << "Checking for rebalancing" << std::endl;
-        std::cout << "Tree height: " << treeHeight << std::endl;
-        std::cout << "Limit: " << limit << std::endl;
-        while (!isBalanced && limit < treeHeight) {
-            isBalanced = checkThresholds(index, limit, segmentLeft, segmentRight);
+        DEBUG_PRINT << "Checking for rebalancing" << std::endl;
+        DEBUG_PRINT << "Tree height: " << treeHeight << std::endl;
+        DEBUG_PRINT << "Limit: " << limit << std::endl;
+
+        while (!isBalanced && startLevel <= treeHeight) {
+            isBalanced = checkThresholds(index, startLevel, limit, segmentLeft, segmentRight);
             limit++;
+            startLevel++;
             rebalance(segmentLeft, segmentRight);
         }
 
         // still not balanced, double the capacity
         // and do a full rebalance
         if (!isBalanced) {
+            DEBUG_PRINT << "Doubling capacity and performing full rebalancing" << std::endl;
             capacity *= 2;
             data.resize(capacity, std::nullopt);
             rebalance(0, capacity - 1);
         }
+    }
+
+    uint64_t findGapWithinSegment(uint64_t left, uint64_t right) {
+        for (uint64_t i = left; i < right; i++) {
+            if (data[i] == std::nullopt) {
+                return i;
+            }
+        }
+        return UINT64_MAX;
+    }
+
+    uint64_t findGapAtLeftNeighbor(uint64_t segmentLeft, uint64_t segmentRight) {
+        if (segmentLeft == 0) return UINT64_MAX;
+        segmentRight = segmentLeft;
+        segmentLeft = segmentRight - segmentSize;
+        return findGapWithinSegment(segmentLeft, segmentRight);
+    }
+    
+    uint64_t findGapAtRightNeighbor(uint64_t segmentLeft, uint64_t segmentRight) {
+        if (segmentRight == capacity) return UINT64_MAX;
+        segmentLeft = segmentRight;
+        segmentRight = segmentLeft + segmentSize;
+        return findGapWithinSegment(segmentLeft, segmentRight);
     }
 
     void insert(int value) {
@@ -266,8 +322,7 @@ public:
         bool fullRebalance = false;
         bool partialRebalance = false;
 
-        std::cout << "Value to insert: " << value << std::endl;
-
+        DEBUG_PRINT << "Value to insert: " << value << std::endl;
         int mid = binarySearchPMA(value);
 
         // value already exists
@@ -277,7 +332,7 @@ public:
         // meaning where we want to insert the value
         // if there is a gap, insert the value and that's it 
         if (data[mid] == std::nullopt) {
-            std::cout << "Inserting value: " << value << " at index: " << mid << std::endl;
+            DEBUG_PRINT << "Inserting value: " << value << " at index: " << mid << std::endl;
             data[mid] = value;
             return;
         } 
@@ -288,57 +343,40 @@ public:
         int segmentRight = segmentLeft + segmentSize;
         uint64_t nearestGap = UINT64_MAX;
 
-        std::cout << "Searching for nearest gap in the segment:" << segmentLeft << ":" << segmentRight << std::endl;
+        DEBUG_PRINT << "Searching for nearest gap in the segment " << segmentLeft << ":" << segmentRight << std::endl;
         
         // linear search for a gap in this segment, define nearestGap
         // TODO: start from the offset closest to mid
-        for (int i = segmentLeft; i < segmentRight; i++) {
-            // gap found in the segment
-            if (data[i] == std::nullopt) {
-                nearestGap = i;
-                break;
-            }
-        }
+        nearestGap = findGapWithinSegment(segmentLeft, segmentRight);
+
         // no gaps in this segment. Is there any other segment? if not, double the capacity
         if (nearestGap == UINT64_MAX) {
             // set this segment to partil rebalancing
             partialRebalance = true;
             bool neighborGapAvailable = false;
 
-            std::cout << "No gaps found in the segment" << std::endl;
-            
-            if (segmentRight < capacity) {
-                // there is a segment available to the right
-                // linear search for a gap within that segment
-                segmentLeft = segmentRight;
-                segmentRight = segmentLeft + segmentSize;
-                // TODO: repeated code
-                for (int i = segmentLeft; i < segmentRight; i++) {
-                    // gap found in the segment
-                    if (data[i] == std::nullopt) {
-                        nearestGap = i;
-                        neighborGapAvailable = true;
-                        break;
-                    }
-                }
-            } else if (segmentLeft > 0) {
-                // there is a segment available to the left
-                segmentRight = segmentLeft;
-                segmentLeft = segmentRight - segmentSize;
-                for (int i = segmentLeft; i < segmentRight; i++) {
-                    // gap found in the segment
-                    if (data[i] == std::nullopt) {
-                        nearestGap = i;
-                        neighborGapAvailable = true;
-                        break;
-                    }
-                }
-            } 
-            
-            // no gaps available in the neighbor segments
-            // double the capacity
-            if (!neighborGapAvailable) {
-                std::cerr << "No gaps available, doubling the array" << std::endl;
+            DEBUG_PRINT << "No gaps found in the segment" << std::endl;
+
+            // TODO: fix this repeated code. for now its ok for readability
+            // try to find gap at the left neighbor
+            nearestGap = findGapAtLeftNeighbor(segmentLeft, segmentRight);
+            // not found, try the right neighbor
+            if (nearestGap == UINT64_MAX) {
+                nearestGap = findGapAtRightNeighbor(segmentLeft, segmentRight);
+            }
+            // try to check rebalancing
+            if (nearestGap == UINT64_MAX) {
+                checkForRebalancing(mid);
+            }
+            // now try the neighbors again
+            nearestGap = findGapAtLeftNeighbor(segmentLeft, segmentRight);
+            // not found, try the right neighbor
+            if (nearestGap == UINT64_MAX) {
+                nearestGap = findGapAtRightNeighbor(segmentLeft, segmentRight);
+            }
+            // nothing? double the capacity
+            if (nearestGap == UINT64_MAX) {
+                DEBUG_PRINT << "No gaps available, doubling the array" << std::endl;
                 capacity *= 2;
                 data.resize(capacity, std::nullopt);
 
@@ -356,13 +394,13 @@ public:
         // if yes, find the nearest gap in the next segment that belongs to the same window. 
         // insert, check the threshold for the upper level
         // If upper level is violated, rebalance upper level + neighbor window.
-        std::cout << "Neareast gap found at: " << nearestGap << std::endl;
+        DEBUG_PRINT << "Neareast gap found at: " << nearestGap << std::endl;
         
         // 'mid' is where we want the element to be placed
         // if nearestGap is greater than mid, shift right
         // if nearestGap is less than mid, shift left
         if (nearestGap > mid) {
-            std::cout << "Shifting right" << std::endl;
+            DEBUG_PRINT << "Shifting right" << std::endl;
             // in case of shifting right, we adjust mid to the right because of
             // the binary search (the mid calculation is always rounded down)
             // but first adjust mid accordingly to where it should be placed
@@ -374,7 +412,7 @@ public:
                 data[i] = data[i - 1];
             }
         } else {
-            std::cout << "Shifting left" << std::endl;
+            DEBUG_PRINT << "Shifting left" << std::endl;
 
             if (value < data[mid].value()) {
                 mid--;
@@ -420,6 +458,10 @@ void fixedInsert(PackedMemoryArray& sv) {
 }
 
 void distInsert(PackedMemoryArray& pma) {
+
+    Timer t;
+    t.start();
+
     std::random_device rd;
 //    std::mt19937 eng(-1011927998);
     int seed = rd();
@@ -429,12 +471,16 @@ void distInsert(PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 10000);
 
     int count = 0;
-    while (count < 100) {
-        int num = distr(eng);
-        pma.insert(num);
+    while (count < 50) {
+       // int num = distr(eng);
+        pma.insert(count);
         pma.print();
         ++count;
     }
+
+    double time_taken = t.stop();
+    std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
+    
 }
 
 int main() {
@@ -442,24 +488,24 @@ int main() {
 
 //    fixedInsert(pma);
 
-    pma.insert(5);
-    pma.print();
-    pma.insert(15);
-    pma.print();
-    pma.insert(10);
-    pma.print();
-    pma.insert(2);
-    pma.print();
-    pma.insert(3);
-    pma.print();
-    pma.insert(11);
-    pma.print();
-    pma.insert(44);
-    pma.print();
-    pma.insert(6);
-    pma.print();
-    pma.insert(77);
-    pma.print();
+//    pma.insert(5);
+//    pma.print();
+//    pma.insert(15);
+//    pma.print();
+//    pma.insert(10);
+//    pma.print();
+//    pma.insert(2);
+//    pma.print();
+//    pma.insert(3);
+//    pma.print();
+//    pma.insert(11);
+//    pma.print();
+//    pma.insert(44);
+//    pma.print();
+//    pma.insert(6);
+//    pma.print();
+//    pma.insert(77);
+//    pma.print();
     distInsert(pma);
 
     // pma.rebalance(0, pma.capacity - 1);
