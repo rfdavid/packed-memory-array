@@ -14,6 +14,8 @@
 #include <optional>
 #include <random>
 #include <cmath>
+#include <thread>
+#include <chrono>
 #include "timer.hpp" // from reddragon
 
 #ifdef DEBUG
@@ -43,10 +45,18 @@ public:
         }
         std::cout << "Array is sorted" << std::endl;
     }
-    void print() {
+
+    void print(bool overwrite = false, uint64_t highlightNumber = UINT64_MAX) {
+        if (overwrite) {
+            std::cout << "\033[2J\033[1;1H";
+        }
         for (uint64_t i = 0; i < capacity; i++) {
             if (data[i].has_value()) {
-                std::cout << data[i].value() << " ";
+                if (data[i].value() == highlightNumber) {
+                    std::cout << "\033[31m" << data[i].value() << "\033[0m ";
+                } else {
+                    std::cout << data[i].value() << " ";
+                }
                 // std::cout << "[" << i << "] => " << data[i].value() << " ";
             } else {
                 std::cout << "_ ";
@@ -213,69 +223,6 @@ public:
         return static_cast<double>(segmentElements) / (right - left);
     }
 
-    // calculate density of the segment
-    // check thresholds, starting from the index value
-    // return true if the segment is balanced
-    // return false if the segment is not balanced, and set the segmentLeft, segmentRight
-    bool checkThresholds(int index, int startLevel, uint16_t limit, uint64_t &sLeft, uint64_t &sRight) {
-        // let level 0 be the bottom level
-        int level = 1;
-        int levelMultipler = 1;
-        // get initial offsets
-        int segmentLeft = index - (index % segmentSize);
-        int segmentRight = segmentLeft + segmentSize;
-
-        DEBUG_PRINT << "Logical tree height: " << limit << std::endl;
-
-        while(level <= limit) {
-            uint64_t segmentPos = (index / (segmentSize * levelMultipler)) + 1;
-
-            // calculate the density
-            // TODO: don't need to go over the whole upper segment
-            // only count the neighbor segment and sum up
-            int segmentElements = 0;
-            for (uint64_t i = segmentLeft; i < segmentRight; i++) {
-                if (data[i]) {
-                    segmentElements++;
-                }
-            }
-            DEBUG_PRINT << "Segment elements: " << segmentElements << std::endl;
-            DEBUG_PRINT << "Segment size: " << segmentSize*levelMultipler << std::endl;
-
-            double density = static_cast<double>(segmentElements) / (segmentSize*levelMultipler);
-            double upperThreshold = upperThresholdAtLevel(level);
-            double lowerThreshold = lowerThresholdAtLevel(level);
-
-            DEBUG_PRINT << "Level: " << level << ", Density: " << density << ", Segment Pos: " << segmentPos << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
-            DEBUG_PRINT << "Upper Threshold: " << upperThreshold << ", Lower Threshold: " << lowerThreshold << std::endl;
-
-            // upper segment is violated? 
-            if (level >= startLevel && density > upperThreshold) {
-                DEBUG_PRINT << "Segment is violated" << std::endl;
-                sLeft = segmentLeft;
-                sRight = segmentRight;
-                return false;
-            }
-
-            // TODO: lower segment is violated?
-
-            // find the segment neighbor
-            if (segmentPos % 2 == 0) {
-                // even, left neighbor
-                segmentLeft -= segmentSize*levelMultipler;
-            } else {
-                // odd, right neighbor
-                segmentRight += segmentSize*levelMultipler;
-            }
-            // level increased, we're considering now the upper level
-            level++;
-
-            // this is necessary to expand the range of the segment
-            levelMultipler *= 2;
-        }
-
-        return true;
-    }
 
     void checkForRebalancing(int index) {
         bool isBalanced = false;
@@ -289,7 +236,6 @@ public:
         DEBUG_PRINT << "Tree height: " << treeHeight << std::endl;
         DEBUG_PRINT << "Limit: " << limit << std::endl;
 
-        DEBUG_PRINT << "----------------------" << std::endl;
         for (int level = 1; level <= treeHeight; level++) {
             getSegmentOffset(level, index, segmentLeft, segmentRight);
              double density = getDensity(segmentLeft, segmentRight);
@@ -316,23 +262,6 @@ public:
             }
 
         }
-        DEBUG_PRINT << "----------------------" << std::endl;
-
-//        while (!isBalanced && startLevel <= treeHeight) {
-//            isBalanced = checkThresholds(index, startLevel, limit, segmentLeft, segmentRight);
-//            limit++;
-//            startLevel++;
-//            rebalance(segmentLeft, segmentRight);
-//        }
-//
-//        // still not balanced, double the capacity
-//        // and do a full rebalance
-//        if (!isBalanced) {
-//            DEBUG_PRINT << "Doubling capacity and performing full rebalancing" << std::endl;
-//            capacity *= 2;
-//            data.resize(capacity, std::nullopt);
-//            rebalance(0, capacity - 1);
-//        }
     }
 
     uint64_t findGapWithinSegment(uint64_t left, uint64_t right) {
@@ -489,18 +418,20 @@ void distInsert(PackedMemoryArray& pma) {
     Timer t;
 
     std::random_device rd;
-//    std::mt19937 eng(-1011927998);
+    std::mt19937 eng(-1011927998);
     int seed = rd();
-//    int seed = -1011927998;
-    std::cout << "Seed: " << seed << std::endl;
-    std::mt19937 eng(seed);
+
+    DEBUG_PRINT << "Seed: " << seed << std::endl;
+    //std::mt19937 eng(seed);
     std::uniform_int_distribution<> distr(0, 10000);
 
     t.start();
-    for (int count = 0; count < 1000000; count++) {
-        // int num = distr(eng);
-        pma.insert(count);
-//        pma.print();
+    for (int count = 0; count < 100; count++) {
+        int num = distr(eng);
+        pma.insert(num);
+//        pma.print(true, num);
+//        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        pma.print();
     }
 
     double time_taken = t.stop();
