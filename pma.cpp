@@ -223,7 +223,15 @@ public:
         return static_cast<double>(segmentElements) / (right - left);
     }
 
+    // in paper example
+    // p2, 11/12 = 0.91 (unbalanced) 10/12 = 0.83 (balanced)
+    // p3, 19/24 = 0.79 (unbalanced) 18/24 = 0.75 (balanced)
+    // 
+    // it is possible to have 20 elements in both window, and upper level is unbalanced
 
+    // check if the segment is balanced, if not, rebalance and check the upper level
+    // if its balanced, check the upper level. If upper level is not balanced, rebalance and check the upper level
+    // 
     void checkForRebalancing(int index) {
         bool isBalanced = false;
         uint64_t segmentLeft = 0;
@@ -318,6 +326,20 @@ public:
         // linear search for a gap in this segment, define nearestGap
         // TODO: start from the offset closest to mid
         nearestGap = findGapWithinSegment(segmentLeft, segmentRight);
+
+	// TODO: this!
+	// assume there will be always a gap in the segment:
+	// 1. shift left or right
+	// 2. insert
+	// 3. check if the segment is full
+	//    3a. is it full? rebalance the window (upper level)
+	//        upper level is not balanced? 
+	//           go to a higher level, rebalance
+	//              upper level is not balanced?
+	//                 go to a higher level, rebalance
+	//                 ...
+	//                 is root level? double the capacity and rebalance
+
 
         // no gaps in this segment. Is there any other segment? if not, double the capacity
         if (nearestGap == UINT64_MAX) {
@@ -423,15 +445,15 @@ void distInsert(PackedMemoryArray& pma) {
 
     DEBUG_PRINT << "Seed: " << seed << std::endl;
     //std::mt19937 eng(seed);
-    std::uniform_int_distribution<> distr(0, 10000);
+    std::uniform_int_distribution<> distr(0, 100);
 
     t.start();
-    for (int count = 0; count < 100; count++) {
-        int num = distr(eng);
-        pma.insert(num);
-//        pma.print(true, num);
+    for (int count = 0; count < 1000000; count++) {
+//        int num = distr(eng);
+        pma.insert(count);
+//        pma.print(true, count);
 //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        pma.print();
+//        pma.print();
     }
 
     double time_taken = t.stop();
