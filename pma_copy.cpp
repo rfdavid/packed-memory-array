@@ -1,3 +1,14 @@
+// window that belongs:
+//
+// |               x
+// |       x       |
+// |   x   |   x   |   x   |  
+// | x | x | x | x | x | x |  
+//   1   2   3   4   5   6
+//
+//   odd = x + x_(n + 1)
+//   even =  x + x_(n - 1)
+//
 #include <iostream>
 #include <vector>
 #include <optional>
@@ -5,7 +16,6 @@
 #include <cmath>
 #include <thread>
 #include <chrono>
-#include <algorithm>
 #include "timer.hpp" // from reddragon
 
 #ifdef DEBUG
@@ -74,15 +84,33 @@ public:
         return ph - (ph - p1) * (height - level) / (height - 1);
     }
 
-
+    // TODO: review this implementation, it doesn't seem to be the best way to do it
     void rebalance(uint64_t left, uint64_t right) {
+        // count gaps and non-gaps
+        // [ _ _ 3 4 5 _ _ _ _ _ ]
+        // 6 gaps, 3 elements, 10 total
+        //
+        // gaps/elements = 2
+        // [ _ _ 3 _ _ 4 _ _ 5 _ ]
+        //
+        // [ _ _ 3 4 5 6 _ _ _ _ ]
+        // 6 gaps, 4 elements, 10 total
+        // 6/4 = 1.5
+        // [ 3 _ 4 _ 5 _ 6 _ _ _ ]
+        // [ 3 _ _ 4 _ _ 5 _ _ 6 ]
+        //
+        //
+        // [ 1 2 _ _ _ 3 4 5 6 7 ]
+        // 3 gaps, 6 elements, 10 total
+        // 0.5 gaps / element => 1 gap / 2 elements
+        // [ 1 2 _ 3 4 _ 5 6 _ 7 ]
+        //
+        //
         // calculate gaps and elements for that segment
         // temporarily store the elements in a vector
         int numElements = 0;
         int segmentSize = right - left;
         std::vector<int> segmentElements;
-        segmentElements.reserve(segmentSize);
-
         for (uint64_t i = left; i < right; i++) {
             if (data[i]) {
                 segmentElements.push_back(data[i].value());
@@ -265,14 +293,37 @@ public:
         }
     }
 
-    // found position will indicate if the gap was found to the left or right
-    // -1 for left, 1 for right
+
+    uint64_t findGapAtLeftNeighbor(uint64_t segmentLeft, uint64_t segmentRight) {
+        if (segmentLeft == 0) return UINT64_MAX;
+        segmentRight = segmentLeft;
+        segmentLeft = segmentRight - segmentSize;
+        // return findGapWithinSegment(segmentLeft, segmentRight);
+        return 0;
+    }
+
+    uint64_t findGapAtRightNeighbor(uint64_t segmentLeft, uint64_t segmentRight) {
+        if (segmentRight == capacity) return UINT64_MAX;
+        segmentLeft = segmentRight;
+        segmentRight = segmentLeft + segmentSize;
+        //return findGapWithinSegment(segmentLeft, segmentRight);
+        return 0;
+    }
+
     uint64_t findFirstGapFrom(uint64_t startingIndex) {
         uint64_t leftCursor = startingIndex;
         uint64_t rightCursor = startingIndex;
         uint64_t gapIndex = UINT64_MAX;
 
         while (leftCursor >= 0 || rightCursor < capacity) {
+            if (leftCursor >= 0) {
+                if (data[leftCursor] == std::nullopt) {
+                    gapIndex = leftCursor;
+                    break;
+                }
+                if (leftCursor == 0) break;
+                leftCursor--;
+            }
             if (rightCursor < capacity) {
                 if (data[rightCursor] == std::nullopt) {
                     gapIndex = rightCursor;
@@ -280,16 +331,35 @@ public:
                 }
                 rightCursor++;
             }
-            if (leftCursor >= 0) {
+        }
+        return gapIndex;
+    }
+
+    uint64_t findGapWithinSegment(uint64_t left, uint64_t right, uint64_t cursor, uint64_t *totalElements) {
+        uint64_t leftCursor = cursor;
+        uint64_t rightCursor = cursor;
+        uint64_t gapIndex = UINT64_MAX;
+
+        while (leftCursor >= left || rightCursor < right) {
+            if (leftCursor >= left) {
                 if (data[leftCursor] == std::nullopt) {
-                    gapIndex = leftCursor;
-                    break;
+                    if (gapIndex == UINT64_MAX) gapIndex = leftCursor;
+                } else {
+                    (*totalElements)++;
                 }
-                // TODO: improve this, perhaps use int64_t
-                if (leftCursor == 0) continue;
+                if (leftCursor == 0) break;
                 leftCursor--;
             }
+            if (rightCursor < right) {
+                if (data[rightCursor] == std::nullopt) {
+                    if (gapIndex == UINT64_MAX) gapIndex = rightCursor;
+                } else {
+                    (*totalElements)++;
+                }
+                rightCursor++;
+            }
         }
+
         return gapIndex;
     }
 
@@ -298,8 +368,8 @@ public:
         bool fullRebalance = false;
         bool partialRebalance = false;
 
+        DEBUG_PRINT << "Value to insert: " << value << std::endl;
         uint64_t mid = binarySearchPMA(value);
-        DEBUG_PRINT << "Value to insert: " << value << ", desired position: " << mid << std::endl;
 
         // value already exists
         if (data[mid] && value == data[mid].value()) return;
@@ -316,30 +386,18 @@ public:
         DEBUG_PRINT << "Searching for nearest gap" << std::endl;
         uint64_t nearestGap = findFirstGapFrom(mid);
 
-        DEBUG_PRINT << "Neareast gap found at: " << nearestGap << ", position: " << std::endl;
+        DEBUG_PRINT << "Neareast gap found at: " << nearestGap << std::endl;
 
         // 'mid' is where we want the element to be placed
         // if nearestGap is greater than mid, shift right
         // if nearestGap is less than mid, shift left
-
         if (nearestGap > mid) {
-            // gap found at the right
             DEBUG_PRINT << "Shifting right" << std::endl;
-
-            // bring the gap to the desired position
-            if (value > data[mid].value()) {
-                mid++;
-            }
-
             for (uint64_t i = nearestGap; i > mid; i--) {
                 data[i] = data[i - 1];
             }
         } else {
             DEBUG_PRINT << "Shifting left" << std::endl;
-
-            if (value < data[mid].value()) {
-                mid--;
-            }
             for (uint64_t i = nearestGap; i < mid; i++) {
                 data[i] = data[i + 1];
             }
@@ -382,18 +440,15 @@ void distInsert(PackedMemoryArray& pma) {
 
     DEBUG_PRINT << "Seed: " << seed << std::endl;
     //std::mt19937 eng(seed);
-    std::uniform_int_distribution<> distr(0, 10000);
+    std::uniform_int_distribution<> distr(0, 100);
 
     t.start();
-    for (int count = 0; count < 1000000; count++) {
-//        int num = distr(eng);
-//        pma.insert(num);
-        pma.insert(count);
+    for (int count = 0; count < 100; count++) {
+        int num = distr(eng);
+        pma.insert(num);
 //        pma.print(true, count);
 //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
- //       pma.print();
-//        pma.checkIfSorted();
-        
+        pma.print();
     }
 
     double time_taken = t.stop();
@@ -428,7 +483,7 @@ int main() {
     //pma.rebalance(0, 24);
  //   pma.print();
 
- //   pma.checkIfSorted();
+//    pma.checkIfSorted();
  //   pma.printLevelsInformation();
 
     return 0;
@@ -440,24 +495,3 @@ int main() {
 
 //             x           x           x           x           x           x
 // 0 _ _ 1 _ _ _ 2 _ _ 3 _ _ _ 4 _ _ 5 _ _ _ 6 _ _ 7 _ _ _ 8 _ _ 9 _ _ _ 10 _ _ 11 _ _ _ 12 _ _ 13 _ _ 14 15 _ 16 17 _ 18 19 _ 20 21 _ 22 23 _ 24 25 _ 26 27 _ 28 29 _ 30 31 32 _ 33 34 _ 35 36 _ 37 38 _ 39 40 _ 41 42 43 44 45 46 47 48
-//
-        // count gaps and non-gaps
-        // [ _ _ 3 4 5 _ _ _ _ _ ]
-        // 6 gaps, 3 elements, 10 total
-        //
-        // gaps/elements = 2
-        // [ _ _ 3 _ _ 4 _ _ 5 _ ]
-        //
-        // [ _ _ 3 4 5 6 _ _ _ _ ]
-        // 6 gaps, 4 elements, 10 total
-        // 6/4 = 1.5
-        // [ 3 _ 4 _ 5 _ 6 _ _ _ ]
-        // [ 3 _ _ 4 _ _ 5 _ _ 6 ]
-        //
-        //
-        // [ 1 2 _ _ _ 3 4 5 6 7 ]
-        // 3 gaps, 6 elements, 10 total
-        // 0.5 gaps / element => 1 gap / 2 elements
-        // [ 1 2 _ 3 4 _ 5 6 _ 7 ]
-        //
-        //
