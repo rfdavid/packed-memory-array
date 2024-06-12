@@ -447,6 +447,7 @@ void BTreePMA_v2::insert(int64_t key, int64_t value){
 
     // Insert the given key/value in the subtree rooted at the given `node'.
     if(UNLIKELY(index.root->is_leaf)){
+        // the only difference is that Leaf includes next and prev pointers
         insert(reinterpret_cast<Leaf*>(index.root), key, value);
     } else {
         insert(reinterpret_cast<InternalNode*>(index.root), key, value);

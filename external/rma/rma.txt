@@ -1,0 +1,49 @@
+- Instantiate 
+- call index_initialize: initialize btree storage
+- call storage_initialize
+- storage is this structure:
+  struct PMA {
+    element_t* m_elements; // the elements contained
+    size_t m_capacity; // the size of the array elements
+    size_t m_segment_capacity; // the capacity of a single segment
+    size_t m_height; // the height of the binary tree for elements
+    size_t m_cardinality; // the number of elements contained
+};
+
+
+template<typename K, typename V>
+struct PMA_Element {
+    K key;
+    V value;
+
+    PMA_Element(): key(), value() { }
+    PMA_Element(K& key, V& value) : key(key), value(value) { }
+};
+
+using element_t = PMA_Element<int64_t, int64_t>;
+
+
+- call insert, insert overloads to insert including Node
+- this is index
+struct BTree {
+    // The lower & upper bounds of the B-Tree node, inclusive
+    const size_t intnode_a; // lower bound for internal nodes
+    const size_t intnode_b; // upper bound for internal nodes
+    const size_t leaf_a; // lower bound for leaves
+    const size_t leaf_b; // upper bound for leaves
+    const size_t storage_a; // lower bound for the number of elements in the PMA
+    const size_t storage_b; // upper bound for the number of elements in the PMA
+    Node* root; // current root
+};
+
+
+Some tricks:
+- make sure one slot at the right is there or store the cardinality
+
+ size_t capacity = storage.m_capacity * 2;
+ COUT_DEBUG("new capacity: " << capacity);
+ size_t segment_capacity = hyperceil(log2(capacity));
+
+
+x 
+_ _ _ _   _ _ _ _   _ _ _ _   _ _ _ _

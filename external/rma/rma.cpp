@@ -1,7 +1,6 @@
 #include "btreepma_v2.hpp"
 #include "../timer.hpp"
 
-
 int main() {
     Timer t;
     pma::BTreePMA_v2 btree(4, 4);

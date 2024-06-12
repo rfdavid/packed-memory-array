@@ -35,8 +35,9 @@ public:
     // upper threshold at top level h
     static constexpr double th = 0.75;
 
-    PackedMemoryArray(uint64_t segmentSize) : segmentSize(segmentSize), capacity(segmentSize) {
-        data = std::vector<std::optional<int>>(log2(segmentSize), std::nullopt);
+    PackedMemoryArray(uint64_t capacity) : capacity(capacity) {
+        segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
+        data = std::vector<std::optional<int>>(capacity, std::nullopt);
     }
 
     /* Helper functions */
@@ -55,7 +56,7 @@ public:
             std::cout << "\033[2J\033[1;1H";
         }
         for (uint64_t i = 0; i < capacity; i++) {
-            if (data[i].has_value()) {
+            if (data[i] != std::nullopt) {
                 if (data[i].value() == highlightNumber) {
                     std::cout << "\033[31m" << data[i].value() << "\033[0m ";
                 } else {
@@ -83,9 +84,9 @@ public:
         // calculate gaps and elements for that segment
         // temporarily store the elements in a vector
         uint64_t numElements = 0;
-        int segmentSize = right - left;
+        int segmentSizeToRebalance = right - left;
         std::vector<int> segmentElements;
-        segmentElements.reserve(segmentSize);
+        segmentElements.reserve(segmentSizeToRebalance);
 
         for (uint64_t i = left; i < right; i++) {
             if (data[i]) {
@@ -94,7 +95,7 @@ public:
             }
         }
 
-        double step = static_cast<double>(segmentSize - 1) / (numElements - 1);
+        double step = static_cast<double>(segmentSizeToRebalance - 1) / (numElements - 1);
         DEBUG_PRINT << "Rebalancing Step: " << step << " between " << left << " and " << right << std::endl;
 
         // clear the segment
@@ -103,7 +104,7 @@ public:
         }
 
         for (uint64_t i = 0; i < numElements; i++) {
-            data[std::round(i * step) + left] = segmentElements[i];
+            data[i * step + left] = segmentElements[i];
         }
     }
 
@@ -167,7 +168,7 @@ public:
         int noOfSegments = capacity / segmentSize;
         if (noOfSegments == 1) return 1;
         int height = log2(noOfSegments) + 1;
-        DEBUG_PRINT << "CApacity: " << capacity << ", No of Segments: " << noOfSegments << ", Height: " << height << std::endl;
+        DEBUG_PRINT << "Capacity: " << capacity << ", No of Segments: " << noOfSegments << ", Height: " << height << std::endl;
         return height;
     }
 
@@ -175,11 +176,24 @@ public:
     // TODO: store those values as in RMA
     void getSegmentOffset(int level, int index, uint64_t &segmentLeft, uint64_t &segmentRight) {
         int levelMultiplier = 1;
+        DEBUG_PRINT << "----index: " << index << std::endl;
+        DEBUG_PRINT << "----segmentSize: " << segmentSize << std::endl;
         segmentLeft = index - (index % segmentSize);
         segmentRight = segmentLeft + segmentSize;
 
+        //[xxx] Segment Position: 3
+        // Segment Left: 20, Segment Right: 30
+        // Segment Size: 5, Level Multiplier: 2
+        // Index: 21
+
         for (int i = 1; i < level; i++) {
             uint64_t segmentPos = (index / (segmentSize * levelMultiplier)) + 1;
+            DEBUG_PRINT << "\n[xxx] Segment Position: " << segmentPos << std::endl;
+            DEBUG_PRINT << "Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
+            DEBUG_PRINT << "Segment Size: " << segmentSize << ", Level Multiplier: " << levelMultiplier << std::endl;
+            DEBUG_PRINT << "Index: " << index << std::endl;
+            DEBUG_PRINT << "Capacity: " << capacity << std::endl;
+
             if (segmentPos % 2 == 0) {
                 // even, left neighbor
                 segmentLeft -= segmentSize*levelMultiplier;
@@ -198,26 +212,33 @@ public:
             return static_cast<double>(totalElements) / capacity;
         }
         int segmentElements = 0;
+        DEBUG_PRINT << "      Checking density between " << left << " and " << right << std::endl;
+        DEBUG_PRINT << "      Total Elements: " << totalElements << std::endl;
+        DEBUG_PRINT << "      Capacity: " << capacity << std::endl;
         for (uint64_t i = left; i < right; i++) {
-            if (data[i]) {
+            if (data[i] != std::nullopt) {
+                DEBUG_PRINT << "[" << i << "]: " << data[i].value() << ", ";
                 segmentElements++;
             }
         }
+        DEBUG_PRINT << "      Segment Elements: " << segmentElements << std::endl;
         return static_cast<double>(segmentElements) / (right - left);
     }
 
     void doubleCapacity() {
         capacity *= 2;
         data.resize(capacity, std::nullopt);
-        segmentSize = log2(capacity);
+//        segmentSize = static_cast<int>(std::log2(capacity));
+        segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
+
     }
+
 
     // in paper example
     // p2, 11/12 = 0.91 (unbalanced) 10/12 = 0.83 (balanced)
     // p3, 19/24 = 0.79 (unbalanced) 18/24 = 0.75 (balanced)
     // 
     // it is possible to have 20 elements in both window, and upper level is unbalanced
-
     // check if the segment is balanced, if not, rebalance and check the upper level
     // if its balanced, check the upper level. If upper level is not balanced, rebalance and check the upper level
     void checkForRebalancing(int index) {
@@ -294,7 +315,16 @@ public:
         return gapIndex;
     }
 
-    void insert(int value) {
+    void deleteElement(int value) {
+        uint64_t mid = binarySearchPMA(value);
+        if (data[mid] && data[mid].value() == value) {
+            data[mid] = std::nullopt;
+            totalElements--;
+            checkForRebalancing(mid);
+        }
+    }
+
+    void insertElement(int value) {
         if (capacity == 0) return;
 
         uint64_t mid = binarySearchPMA(value);
@@ -355,17 +385,18 @@ void distInsert(PackedMemoryArray& pma) {
     Timer t;
 
     std::random_device rd;
-    //std::mt19937 eng(-1011927998);
+    std::mt19937 eng(-1011927998);
     int seed = rd();
 
     DEBUG_PRINT << "Seed: " << seed << std::endl;
-    std::mt19937 eng(seed);
+    //std::mt19937 eng(seed);
     std::uniform_int_distribution<> distr(0, 10000);
     t.start();
 
-    for (int count = 0; count < 1000; count++) {
+
+    for (int count = 0; count < 17; count++) {
         int num = distr(eng);
-        pma.insert(num);
+        pma.insertElement(num);
         pma.print();
 //        pma.insert(count);
 //        pma.print(true, count);
@@ -379,9 +410,9 @@ void distInsert(PackedMemoryArray& pma) {
 }
 
 int main() {
-    PackedMemoryArray pma(4 /* initial capacity */);
+    PackedMemoryArray pma(6 /* initial capacity */);
     distInsert(pma);
-    pma.checkIfSorted();
+//    pma.checkIfSorted();
 
     return 0;
 }

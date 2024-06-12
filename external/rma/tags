@@ -1,0 +1,506 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+ARGREF	console_arguments.hpp	/^#define ARGREF(/;"	d
+Arg	clara.hpp	/^    class Arg : public ParserRefImpl<Arg> {$/;"	c	namespace:clara::detail
+Args	clara.hpp	/^        Args( int argc, char const* const* argv )$/;"	f	class:clara::detail::Args
+Args	clara.hpp	/^        Args( std::initializer_list<std::string> args )$/;"	f	class:clara::detail::Args
+Args	clara.hpp	/^    class Args {$/;"	c	namespace:clara::detail
+BTREE_PMA_V2	btreepma_v2.hpp	/^#define BTREE_PMA_V2$/;"	d
+BTree	btreepma_v2.hpp	/^struct BTree {$/;"	s	namespace:pma::btree_pma_v2_detail
+BTreePMA_v2	btreepma_v2.cpp	/^BTreePMA_v2::BTreePMA_v2() : BTreePMA_v2(4, 4) { }$/;"	f	class:pma::BTreePMA_v2
+BTreePMA_v2	btreepma_v2.cpp	/^BTreePMA_v2::BTreePMA_v2(size_t index_A, size_t index_B, size_t storage_A, size_t storage_B) : index( index_initialize(index_A, index_B, index_A, index_B, storage_A, storage_B) ), storage() {$/;"	f	class:pma::BTreePMA_v2
+BTreePMA_v2	btreepma_v2.cpp	/^BTreePMA_v2::BTreePMA_v2(size_t index_B, size_t storage_B) : index(index_initialize(index_B, storage_B)), storage(){$/;"	f	class:pma::BTreePMA_v2
+BTreePMA_v2	btreepma_v2.hpp	/^class BTreePMA_v2 : public InterfaceRQ {$/;"	c	namespace:pma
+BasicResult	clara.hpp	/^        BasicResult( ResultBase::Type type, std::string const &message )$/;"	f	class:clara::detail::BasicResult
+BasicResult	clara.hpp	/^        explicit BasicResult( BasicResult<U> const &other )$/;"	f	class:clara::detail::BasicResult
+BasicResult	clara.hpp	/^    class BasicResult : public ResultValueBase<T> {$/;"	c	namespace:clara::detail
+BoundFlagLambda	clara.hpp	/^        explicit BoundFlagLambda( L const &lambda ) : m_lambda( lambda ) {}$/;"	f	struct:clara::detail::BoundFlagLambda
+BoundFlagLambda	clara.hpp	/^    struct BoundFlagLambda : BoundFlagRefBase {$/;"	s	namespace:clara::detail
+BoundFlagRef	clara.hpp	/^        explicit BoundFlagRef( bool &ref ) : m_ref( ref ) {}$/;"	f	struct:clara::detail::BoundFlagRef
+BoundFlagRef	clara.hpp	/^    struct BoundFlagRef : BoundFlagRefBase {$/;"	s	namespace:clara::detail
+BoundFlagRefBase	clara.hpp	/^    struct BoundFlagRefBase : BoundRef {$/;"	s	namespace:clara::detail
+BoundLambda	clara.hpp	/^        explicit BoundLambda( L const &lambda ) : m_lambda( lambda ) {}$/;"	f	struct:clara::detail::BoundLambda
+BoundLambda	clara.hpp	/^    struct BoundLambda : BoundValueRefBase {$/;"	s	namespace:clara::detail
+BoundRef	clara.hpp	/^    struct BoundRef : NonCopyable {$/;"	s	namespace:clara::detail
+BoundValueRef	clara.hpp	/^        explicit BoundValueRef( T &ref ) : m_ref( ref ) {}$/;"	f	struct:clara::detail::BoundValueRef
+BoundValueRef	clara.hpp	/^        explicit BoundValueRef( std::vector<T> &ref ) : m_ref( ref ) {}$/;"	f	struct:clara::detail::BoundValueRef
+BoundValueRef	clara.hpp	/^    struct BoundValueRef : BoundValueRefBase {$/;"	s	namespace:clara::detail
+BoundValueRef	clara.hpp	/^    struct BoundValueRef<std::vector<T>> : BoundValueRefBase {$/;"	s	namespace:clara::detail
+BoundValueRefBase	clara.hpp	/^    struct BoundValueRefBase : BoundRef {$/;"	s	namespace:clara::detail
+CACHELINE	miscellaneous.hpp	/^#define CACHELINE /;"	d
+CLARA_CONFIG_CONSOLE_WIDTH	clara.hpp	/^#define CLARA_CONFIG_CONSOLE_WIDTH /;"	d
+CLARA_CONFIG_CONSOLE_WIDTH	console_arguments.hpp	/^#define CLARA_CONFIG_CONSOLE_WIDTH /;"	d
+CLARA_CONFIG_OPTIONAL_TYPE	clara.hpp	/^#define CLARA_CONFIG_OPTIONAL_TYPE /;"	d
+CLARA_HPP_INCLUDED	clara.hpp	/^#define CLARA_HPP_INCLUDED$/;"	d
+CLARA_PLATFORM_WINDOWS	clara.hpp	/^#define CLARA_PLATFORM_WINDOWS$/;"	d
+CLARA_TEXTFLOW_CONFIG_CONSOLE_WIDTH	clara.hpp	/^#define CLARA_TEXTFLOW_CONFIG_CONSOLE_WIDTH /;"	d
+CLARA_TEXTFLOW_HPP_INCLUDED	clara.hpp	/^#define CLARA_TEXTFLOW_HPP_INCLUDED$/;"	d
+CONFIGURATION_HPP_	configuration.hpp	/^#define CONFIGURATION_HPP_$/;"	d
+CONSOLE_ARGUMENTS_HPP_	console_arguments.hpp	/^#define CONSOLE_ARGUMENTS_HPP_$/;"	d
+COUT_DEBUG	btreepma_v2.cpp	/^    #define COUT_DEBUG(/;"	d	file:
+COUT_DEBUG	slh17/pma.cpp	/^    #define COUT_DEBUG(/;"	d	file:
+COUT_DEBUG_FORCE	btreepma_v2.cpp	/^#define COUT_DEBUG_FORCE(/;"	d	file:
+COUT_DEBUG_FORCE	slh17/pma.cpp	/^#define COUT_DEBUG_FORCE(/;"	d	file:
+Column	clara.hpp	/^        explicit Column( std::string const& text ) { m_strings.push_back( text ); }$/;"	f	class:clara::TextFlow::Column
+Column	clara.hpp	/^    class Column {$/;"	c	namespace:clara::TextFlow
+Columns	clara.hpp	/^        auto operator + ( Column const& other ) -> Columns;$/;"	m	class:clara::TextFlow::Column
+Columns	clara.hpp	/^    class Columns {$/;"	c	namespace:clara::TextFlow
+ComposableParserImpl	clara.hpp	/^    class ComposableParserImpl : public ParserBase {$/;"	c	namespace:clara::detail
+Configuration	configuration.cpp	/^Configuration::Configuration() {$/;"	f	class:configuration::Configuration
+Configuration	configuration.hpp	/^class Configuration {$/;"	c	namespace:configuration
+DEFINE_EXCEPTION	errorhandling.hpp	/^#define DEFINE_EXCEPTION(/;"	d
+ELEMENTS_PER_CACHELINE	miscellaneous.hpp	/^static constexpr int ELEMENTS_PER_CACHELINE = CACHELINE \/ sizeof(int64_t);$/;"	v
+ERROR	configuration.cpp	/^#define ERROR(/;"	d	file:
+ERRORHANDLING_HPP_	errorhandling.hpp	/^#define ERRORHANDLING_HPP_$/;"	d
+EndTag	clara.hpp	/^            struct EndTag {};$/;"	s	class:clara::TextFlow::Columns::iterator
+Exception	errorhandling.cpp	/^Exception::Exception(const std::string& exceptionClass_, const std::string& message_, const std::string& file_, int line_, const std::string& function_)$/;"	f	class:Exception
+Exception	errorhandling.hpp	/^class Exception : public std::runtime_error {$/;"	c
+ExeName	clara.hpp	/^        ExeName() : m_name( std::make_shared<std::string>( "<executable>" ) ) {}$/;"	f	class:clara::detail::ExeName
+ExeName	clara.hpp	/^        explicit ExeName( LambdaT const& lambda ) : ExeName() {$/;"	f	class:clara::detail::ExeName
+ExeName	clara.hpp	/^        explicit ExeName( std::string &ref ) : ExeName() {$/;"	f	class:clara::detail::ExeName
+ExeName	clara.hpp	/^    class ExeName : public ComposableParserImpl<ExeName> {$/;"	c	namespace:clara::detail
+Help	clara.hpp	/^        Help( bool &showHelpFlag )$/;"	f	struct:clara::detail::Help
+Help	clara.hpp	/^    struct Help : Opt {$/;"	s	namespace:clara::detail
+HelpColumns	clara.hpp	/^    struct HelpColumns {$/;"	s	namespace:clara::detail
+Interface	interface.hpp	/^class Interface {$/;"	c	namespace:pma
+InterfaceRQ	interface.hpp	/^class InterfaceRQ : public Interface {$/;"	c	namespace:pma
+InternalNode	btreepma_v2.hpp	/^struct InternalNode : public Node {$/;"	s	namespace:pma::btree_pma_v2_detail
+InternalParseResult	clara.hpp	/^        virtual auto parse( std::string const& exeName, TokenStream const &tokens) const -> InternalParseResult  = 0;$/;"	m	class:clara::detail::ParserBase
+Iterator	iterator.hpp	/^struct Iterator {$/;"	s	namespace:pma
+Iterator	slh17/pma.cpp	/^Iterator::Iterator(const std::vector<ELEMENT_TYPE> &data, const std::vector<bool> &element_exist, int64_t start \/* inclusive *\/, int64_t end \/* exclusive *\/) :$/;"	f	class:pma::sha::Iterator
+Iterator	slh17/pma.hpp	/^class Iterator : public ::pma::Iterator {$/;"	c	namespace:pma::sha
+IteratorImpl	btreepma_v2.cpp	/^IteratorImpl::IteratorImpl(const PMA& storage, size_t start, int64_t key_min, int64_t key_max) :$/;"	f	class:pma::IteratorImpl
+IteratorImpl	btreepma_v2.hpp	/^class IteratorImpl : public pma::Iterator {$/;"	c	namespace:pma::btree_pma_v2_detail
+LIKELY	miscellaneous.hpp	/^#define LIKELY(/;"	d
+LOG_VERBOSE	configuration.hpp	/^#define LOG_VERBOSE(/;"	d
+LambdaInvoker	clara.hpp	/^    struct LambdaInvoker {$/;"	s	namespace:clara::detail
+LambdaInvoker	clara.hpp	/^    struct LambdaInvoker<void> {$/;"	s	namespace:clara::detail
+Leaf	btreepma_v2.hpp	/^struct Leaf : public Node {$/;"	s	namespace:pma::btree_pma_v2_detail
+LogicError	clara.hpp	/^            Ok, LogicError, RuntimeError$/;"	e	enum:clara::detail::ResultBase::Type
+MEMFD_CREATE_WRAPPER	miscellaneous.cpp	/^#define MEMFD_CREATE_WRAPPER$/;"	d	file:
+MISCELLANEOUS_HPP_	miscellaneous.hpp	/^#define MISCELLANEOUS_HPP_$/;"	d
+Matched	clara.hpp	/^        Matched, NoMatch, ShortCircuitAll, ShortCircuitSame$/;"	m	class:clara::detail::ParseResultType
+N	btreepma_v2.hpp	/^    size_t N : 56; \/\/ the number of elements contained$/;"	m	struct:pma::btree_pma_v2_detail::Node
+NoMatch	clara.hpp	/^        Matched, NoMatch, ShortCircuitAll, ShortCircuitSame$/;"	m	class:clara::detail::ParseResultType
+Node	btreepma_v2.hpp	/^struct Node{$/;"	s	namespace:pma::btree_pma_v2_detail
+NonCopyable	clara.hpp	/^    struct NonCopyable {$/;"	s	namespace:clara::detail
+ONLY_IF_PROFILING_ENABLED	miscellaneous.hpp	/^        #define ONLY_IF_PROFILING_ENABLED(/;"	d
+Ok	clara.hpp	/^            Ok, LogicError, RuntimeError$/;"	e	enum:clara::detail::ResultBase::Type
+Opt	clara.hpp	/^        Opt( LambdaT const &ref, std::string const &hint ) : ParserRefImpl( ref, hint ) {}$/;"	f	class:clara::detail::Opt
+Opt	clara.hpp	/^        Opt( T &ref, std::string const &hint ) : ParserRefImpl( ref, hint ) {}$/;"	f	class:clara::detail::Opt
+Opt	clara.hpp	/^        explicit Opt( LambdaT const &ref ) : ParserRefImpl( std::make_shared<BoundFlagLambda<LambdaT>>( ref ) ) {}$/;"	f	class:clara::detail::Opt
+Opt	clara.hpp	/^        explicit Opt( bool &ref ) : ParserRefImpl( std::make_shared<BoundFlagRef>( ref ) ) {}$/;"	f	class:clara::detail::Opt
+Opt	clara.hpp	/^    class Opt : public ParserRefImpl<Opt> {$/;"	c	namespace:clara::detail
+Option	clara.hpp	/^        Option, Argument$/;"	m	class:clara::detail::TokenType
+Optional	clara.hpp	/^    enum class Optionality { Optional, Required };$/;"	m	class:clara::detail::Optionality
+Optionality	clara.hpp	/^    enum class Optionality { Optional, Required };$/;"	c	namespace:clara::detail
+PARAMETER	console_arguments.hpp	/^#define PARAMETER(/;"	d
+PMA	btreepma_v2.hpp	/^struct PMA {$/;"	s	namespace:pma::btree_pma_v2_detail
+PMA	slh17/pma.cpp	/^PMA::PMA() {$/;"	f	class:pma::sha::PMA
+PMA	slh17/pma.hpp	/^class PMA : public InterfaceRQ {$/;"	c	namespace:pma::sha
+PMA_EXTERNAL_SHA_PMA_HPP_	slh17/pma.hpp	/^#define PMA_EXTERNAL_SHA_PMA_HPP_$/;"	d
+PMA_Element	btreepma_v2.hpp	/^    PMA_Element(): key(), value() { }$/;"	f	struct:pma::btree_pma_v2_detail::PMA_Element
+PMA_Element	btreepma_v2.hpp	/^    PMA_Element(K& key, V& value) : key(key), value(value) { }$/;"	f	struct:pma::btree_pma_v2_detail::PMA_Element
+PMA_Element	btreepma_v2.hpp	/^struct PMA_Element {$/;"	s	namespace:pma::btree_pma_v2_detail
+PMA_INTERFACE_HPP_	interface.hpp	/^#define PMA_INTERFACE_HPP_$/;"	d
+PMA_ITERATOR_HPP_	iterator.hpp	/^#define PMA_ITERATOR_HPP_$/;"	d
+PREFETCH	miscellaneous.hpp	/^#define PREFETCH(/;"	d
+ParameterBase	console_arguments.cpp	/^ParameterBase::ParameterBase(const char* source, int line): m_source(source), m_line(line) { }$/;"	f	class:configuration::details::ParameterBase
+ParameterBase	console_arguments.hpp	/^class ParameterBase {$/;"	c	namespace:configuration::details
+ParameterBaseImpl	console_arguments.cpp	/^ParameterBaseImpl::ParameterBaseImpl(const char* name, const char* source, int line) : m_long(name), m_required(false) {$/;"	f	class:configuration::details::ParameterBaseImpl
+ParameterBaseImpl	console_arguments.hpp	/^class ParameterBaseImpl {$/;"	c	namespace:configuration::details
+ParameterImpl	console_arguments.hpp	/^    ParameterImpl<T>(const char* name, const char* source, int line) : ParameterBaseImpl(name, source, line)  { }$/;"	f	class:configuration::details::ParameterImpl
+ParameterImpl	console_arguments.hpp	/^class ParameterImpl : public ParameterBaseImpl {$/;"	c	namespace:configuration::details
+ParameterProperty	console_arguments.hpp	/^    ParameterProperty(){ }$/;"	f	struct:configuration::details::ParameterProperty
+ParameterProperty	console_arguments.hpp	/^    ParameterProperty(const T& value): m_value(value), m_state(State::DEFAULT){ } \/\/ default value$/;"	f	struct:configuration::details::ParameterProperty
+ParameterProperty	console_arguments.hpp	/^struct ParameterProperty {$/;"	s	namespace:configuration::details
+ParameterValidate	console_arguments.hpp	/^    ParameterValidate(const Callable& callable) : callable(callable) { }$/;"	f	struct:configuration::details::ParameterValidate
+ParameterValidate	console_arguments.hpp	/^struct ParameterValidate : public ParameterValidateBase<T> {$/;"	s	namespace:configuration::details
+ParameterValidateBase	console_arguments.hpp	/^struct ParameterValidateBase {$/;"	s	namespace:configuration::details
+ParseResultType	clara.hpp	/^    enum class ParseResultType {$/;"	c	namespace:clara::detail
+ParseState	clara.hpp	/^        ParseState( ParseResultType type, TokenStream const &remainingTokens )$/;"	f	class:clara::detail::ParseState
+ParseState	clara.hpp	/^    class ParseState {$/;"	c	namespace:clara::detail
+Parser	clara.hpp	/^        auto operator+( T const &other ) const -> Parser;$/;"	m	class:clara::detail::ComposableParserImpl
+Parser	clara.hpp	/^        auto operator|( T const &other ) const -> Parser;$/;"	m	class:clara::detail::ComposableParserImpl
+Parser	clara.hpp	/^    struct Parser : ParserBase {$/;"	s	namespace:clara::detail
+ParserBase	clara.hpp	/^    class ParserBase {$/;"	c	namespace:clara::detail
+ParserRefImpl	clara.hpp	/^        ParserRefImpl( LambdaT const &ref, std::string const &hint )$/;"	f	class:clara::detail::ParserRefImpl
+ParserRefImpl	clara.hpp	/^        ParserRefImpl( T &ref, std::string const &hint )$/;"	f	class:clara::detail::ParserRefImpl
+ParserRefImpl	clara.hpp	/^        explicit ParserRefImpl( std::shared_ptr<BoundRef> const &ref ) : m_ref( ref ) {}$/;"	f	class:clara::detail::ParserRefImpl
+ParserRefImpl	clara.hpp	/^    class ParserRefImpl : public ComposableParserImpl<DerivedT> {$/;"	c	namespace:clara::detail
+ParserResult	clara.hpp	/^        virtual auto setFlag( bool flag ) -> ParserResult = 0;$/;"	m	struct:clara::detail::BoundFlagRefBase
+ParserResult	clara.hpp	/^        virtual auto setValue( std::string const &arg ) -> ParserResult = 0;$/;"	m	struct:clara::detail::BoundValueRefBase
+RAISE_EXCEPTION	errorhandling.hpp	/^#define RAISE_EXCEPTION(/;"	d
+RAISE_EXCEPTION_CREATE_ARGUMENTS	errorhandling.hpp	/^#define RAISE_EXCEPTION_CREATE_ARGUMENTS(/;"	d
+ResultBase	clara.hpp	/^        ResultBase( Type type ) : m_type( type ) {}$/;"	f	class:clara::detail::ResultBase
+ResultBase	clara.hpp	/^    class ResultBase {$/;"	c	namespace:clara::detail
+ResultValueBase	clara.hpp	/^        ResultValueBase( ResultValueBase const &other ) : ResultBase( other ) {$/;"	f	class:clara::detail::ResultValueBase
+ResultValueBase	clara.hpp	/^        ResultValueBase( Type type ) : ResultBase( type ) {}$/;"	f	class:clara::detail::ResultValueBase
+ResultValueBase	clara.hpp	/^        ResultValueBase( Type, T const &value ) : ResultBase( Ok ) {$/;"	f	class:clara::detail::ResultValueBase
+ResultValueBase	clara.hpp	/^    class ResultValueBase : public ResultBase {$/;"	c	namespace:clara::detail
+ResultValueBase	clara.hpp	/^    class ResultValueBase<void> : public ResultBase {$/;"	c	namespace:clara::detail
+RuntimeError	clara.hpp	/^            Ok, LogicError, RuntimeError$/;"	e	enum:clara::detail::ResultBase::Type
+SET	console_arguments.hpp	/^enum class State { UNSET, SET, DEFAULT };$/;"	m	class:configuration::details::State
+ShortCircuitAll	clara.hpp	/^        Matched, NoMatch, ShortCircuitAll, ShortCircuitSame$/;"	m	class:clara::detail::ParseResultType
+Spacer	clara.hpp	/^        explicit Spacer( size_t spaceWidth ) : Column( "" ) {$/;"	f	class:clara::TextFlow::Spacer
+Spacer	clara.hpp	/^    class Spacer : public Column {$/;"	c	namespace:clara::TextFlow
+State	console_arguments.hpp	/^enum class State { UNSET, SET, DEFAULT };$/;"	c	namespace:configuration::details
+SumResult	interface.hpp	/^    struct SumResult {$/;"	s	class:pma::Interface
+TextFlow	clara.hpp	/^namespace clara { namespace TextFlow {$/;"	n	namespace:clara
+Token	clara.hpp	/^    struct Token {$/;"	s	namespace:clara::detail
+TokenStream	clara.hpp	/^        TokenStream( Iterator it, Iterator itEnd ) : it( it ), itEnd( itEnd ) {$/;"	f	class:clara::detail::TokenStream
+TokenStream	clara.hpp	/^        explicit TokenStream( Args const &args ) : TokenStream( args.m_args.begin(), args.m_args.end() ) {}$/;"	f	class:clara::detail::TokenStream
+TokenStream	clara.hpp	/^    class TokenStream {$/;"	c	namespace:clara::detail
+TokenType	clara.hpp	/^    enum class TokenType {$/;"	c	namespace:clara::detail
+Type	clara.hpp	/^        enum Type {$/;"	g	class:clara::detail::ResultBase
+TypedParameter	console_arguments.hpp	/^    TypedParameter<T>(const char* name, const char* source, int line) : TypedParameterRef<T>(ref(name, source, line), name, source, line) { }$/;"	f	class:configuration::details::TypedParameter
+TypedParameter	console_arguments.hpp	/^class TypedParameter : public TypedParameterRef<T> {$/;"	c	namespace:configuration::details
+TypedParameterRef	console_arguments.hpp	/^    TypedParameterRef<T>(ParameterBaseImpl* impl, const char* name, const char* source, int line) :$/;"	f	class:configuration::details::TypedParameterRef
+TypedParameterRef	console_arguments.hpp	/^    TypedParameterRef<T>(const char* name, const char* source, int line) :$/;"	f	class:configuration::details::TypedParameterRef
+TypedParameterRef	console_arguments.hpp	/^class TypedParameterRef : public ParameterBase {$/;"	c	namespace:configuration::details
+UNLIKELY	miscellaneous.hpp	/^#define UNLIKELY(/;"	d
+UNSET	console_arguments.hpp	/^enum class State { UNSET, SET, DEFAULT };$/;"	m	class:configuration::details::State
+UnaryLambdaTraits	clara.hpp	/^    struct UnaryLambdaTraits : UnaryLambdaTraits<decltype( &L::operator() )> {};$/;"	s	namespace:clara::detail
+UnaryLambdaTraits	clara.hpp	/^    struct UnaryLambdaTraits<ReturnT( ClassT::* )( ArgT ) const> {$/;"	s	namespace:clara::detail
+UnaryLambdaTraits	clara.hpp	/^    struct UnaryLambdaTraits<ReturnT( ClassT::* )( Args... ) const> {$/;"	s	namespace:clara::detail
+add_alias	console_arguments.cpp	/^void ParameterBaseImpl::add_alias(const char* alias, const char* source, int line) {$/;"	f	class:configuration::details::ParameterBaseImpl
+alias	console_arguments.hpp	/^    decltype(auto) alias(const char* name){$/;"	f	class:configuration::details::TypedParameter
+aligned_gather_multiple	miscellaneous.cpp	/^static void aligned_gather_multiple(int64_t* __restrict destination, int64_t* __restrict source, int numblocks){$/;"	f	file:
+aligned_gather_single	miscellaneous.cpp	/^static void aligned_gather_single(int64_t* __restrict destination, int64_t* __restrict source){$/;"	f	file:
+aligned_scatter_multiple	miscellaneous.cpp	/^static void aligned_scatter_multiple(int64_t* __restrict destination, int64_t* __restrict source, int numblocks){$/;"	f	file:
+aligned_scatter_single	miscellaneous.cpp	/^static void aligned_scatter_single(int64_t* __restrict destination, int64_t* __restrict source){$/;"	f	file:
+argument_ref	console_arguments.hpp	/^configuration::details::TypedParameterRef<T> argument_ref(const char* name, const char* source, int line){$/;"	f	namespace:configuration
+barrier	miscellaneous.hpp	/^inline void barrier(){$/;"	f
+btree_pma_v2_detail	btreepma_v2.hpp	/^namespace btree_pma_v2_detail {$/;"	n	namespace:pma
+buffer_	slh17/pma.hpp	/^    std::vector <ELEMENT_TYPE> buffer_;$/;"	m	class:pma::sha::PMA
+build	interface.cpp	/^void Interface::build(){ };$/;"	f	class:pma::Interface
+calcLength	clara.hpp	/^            void calcLength() {$/;"	f	class:clara::TextFlow::Column::iterator
+callable	console_arguments.hpp	/^    Callable callable;$/;"	m	struct:configuration::details::ParameterValidate
+cardinalities	btreepma_v2.cpp	/^uint16_t* BTreePMA_v2::cardinalities(const Leaf* leaf) const {$/;"	f	class:pma::BTreePMA_v2
+children	btreepma_v2.cpp	/^Node** BTreePMA_v2::children(const InternalNode* inode) const {$/;"	f	class:pma::BTreePMA_v2
+clara	clara.hpp	/^namespace clara { namespace TextFlow {$/;"	n
+clara	clara.hpp	/^namespace clara {$/;"	n
+config	configuration.hpp	/^inline configuration::Configuration& config() {$/;"	f
+configuration	configuration.cpp	/^namespace configuration {$/;"	n	file:
+configuration	configuration.hpp	/^namespace configuration {$/;"	n
+configuration	console_arguments.cpp	/^namespace configuration {$/;"	n	file:
+configuration	console_arguments.hpp	/^namespace configuration {$/;"	n
+create_internal_node	btreepma_v2.cpp	/^InternalNode* BTreePMA_v2::create_internal_node() const {$/;"	f	class:pma::BTreePMA_v2
+create_leaf	btreepma_v2.cpp	/^Leaf* BTreePMA_v2::create_leaf() const {$/;"	f	class:pma::BTreePMA_v2
+data_	slh17/pma.hpp	/^    const std::vector <ELEMENT_TYPE>& data_;$/;"	m	class:pma::sha::Iterator
+data_	slh17/pma.hpp	/^    std::vector <ELEMENT_TYPE> data_;$/;"	m	class:pma::sha::PMA
+delete_node	btreepma_v2.cpp	/^void BTreePMA_v2::delete_node(InternalNode* inode){$/;"	f	class:pma::BTreePMA_v2
+delete_node	btreepma_v2.cpp	/^void BTreePMA_v2::delete_node(Leaf* leaf){$/;"	f	class:pma::BTreePMA_v2
+delete_node	btreepma_v2.cpp	/^void BTreePMA_v2::delete_node(Node* node) {$/;"	f	class:pma::BTreePMA_v2
+density_lower_thres_leaf_	slh17/pma.hpp	/^    double density_lower_thres_leaf_ = 0.08;$/;"	m	class:pma::sha::PMA
+density_lower_thres_root_	slh17/pma.hpp	/^    double density_lower_thres_root_ = 0.30;$/;"	m	class:pma::sha::PMA
+density_upper_thres_leaf_	slh17/pma.hpp	/^    double density_upper_thres_leaf_ = 0.92;$/;"	m	class:pma::sha::PMA
+density_upper_thres_root_	slh17/pma.hpp	/^    double density_upper_thres_root_ = 0.70;$/;"	m	class:pma::sha::PMA
+descr	console_arguments.hpp	/^    decltype(auto) descr(const std::string& help){ return description(help); } \/\/ alias$/;"	f	class:configuration::details::TypedParameter
+description	console_arguments.cpp	/^const std::string& ParameterBaseImpl::description() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+description	console_arguments.hpp	/^    decltype(auto) description(const std::string& help){$/;"	f	class:configuration::details::TypedParameter
+detail	clara.hpp	/^namespace detail {$/;"	n	namespace:clara
+details	configuration.hpp	/^namespace details {$/;"	n	namespace:configuration
+details	console_arguments.cpp	/^namespace details {$/;"	n	namespace:configuration	file:
+details	console_arguments.hpp	/^namespace details {$/;"	n	namespace:configuration
+dump	btreepma_v2.cpp	/^void BTreePMA_v2::dump() const {$/;"	f	class:pma::BTreePMA_v2
+dump	btreepma_v2.cpp	/^void BTreePMA_v2::dump(std::ostream& out) const {$/;"	f	class:pma::BTreePMA_v2
+dump	slh17/pma.cpp	/^void PMA::dump() const {$/;"	f	class:pma::sha::PMA
+dump_node	btreepma_v2.cpp	/^void BTreePMA_v2::dump_node(std::ostream& out, Node* node, size_t depth, bool* integrity_check) const {$/;"	f	class:pma::BTreePMA_v2
+dump_storage	btreepma_v2.cpp	/^void BTreePMA_v2::dump_storage(std::ostream& out) const{$/;"	f	class:pma::BTreePMA_v2
+dump_tabs	btreepma_v2.cpp	/^static void dump_tabs(std::ostream& out, size_t depth){$/;"	f	namespace:pma
+element_cnt_	slh17/pma.hpp	/^    int64_t element_cnt_;$/;"	m	class:pma::sha::PMA
+element_exist_	slh17/pma.hpp	/^    const std::vector<bool>& element_exist_;$/;"	m	class:pma::sha::Iterator
+element_exist_	slh17/pma.hpp	/^    std::vector<bool> element_exist_;$/;"	m	class:pma::sha::PMA
+empty	btreepma_v2.cpp	/^bool BTreePMA_v2::empty() const {$/;"	f	class:pma::BTreePMA_v2
+empty	btreepma_v2.hpp	/^inline bool Node::empty() const {$/;"	f	class:pma::btree_pma_v2_detail::Node
+empty_iterator	btreepma_v2.cpp	/^std::unique_ptr<pma::Iterator> BTreePMA_v2::empty_iterator() const{$/;"	f	class:pma::BTreePMA_v2
+end	slh17/pma.hpp	/^    const int64_t end;$/;"	m	class:pma::sha::Iterator
+evenly_dispatch_buffer	slh17/pma.cpp	/^void PMA::evenly_dispatch_buffer(int64_t head, int64_t rear) {$/;"	f	class:pma::sha::PMA
+exceptionClass	errorhandling.hpp	/^    const std::string exceptionClass; \/\/ the class of the exception ("Graph::Exception")$/;"	m	class:Exception
+file	errorhandling.hpp	/^    const std::string file; \/\/ source file where the exception has been raised$/;"	m	class:Exception
+find	btreepma_v2.cpp	/^int64_t BTreePMA_v2::find(int64_t key) const {$/;"	f	class:pma::BTreePMA_v2
+find	btreepma_v2.cpp	/^std::unique_ptr<pma::Iterator> BTreePMA_v2::find(int64_t min, int64_t max) const {$/;"	f	class:pma::BTreePMA_v2
+find	slh17/pma.cpp	/^int64_t PMA::find(int64_t key) const {$/;"	f	class:pma::sha::PMA
+find	slh17/pma.cpp	/^std::unique_ptr<::pma::Iterator> PMA::find(int64_t min, int64_t max) const {$/;"	f	class:pma::sha::PMA
+find_generic_impl	console_arguments.cpp	/^ParameterBaseImpl* ParameterBase::find_generic_impl(const char* name){$/;"	f	class:configuration::details::ParameterBase
+find_interval	slh17/pma.cpp	/^std::pair<int64_t, int64_t> PMA::find_interval(int64_t min, int64_t max) const {$/;"	f	class:pma::sha::PMA
+fls	slh17/pma.cpp	/^static int fls(uint64_t x) {$/;"	f	namespace:pma::sha
+function	errorhandling.hpp	/^    const std::string function; \/\/ function causing the exception$/;"	m	class:Exception
+generate_array	miscellaneous.cpp	/^ptr_elements_t generate_array(size_t size, uint64_t seed){$/;"	f
+get	console_arguments.hpp	/^    T get() const {$/;"	f	class:configuration::details::TypedParameterRef
+get	console_arguments.hpp	/^    bool get(T& variable) const {$/;"	f	class:configuration::details::TypedParameterRef
+get	console_arguments.hpp	/^    const T& get() const {$/;"	f	class:configuration::details::ParameterImpl
+getExceptionClass	errorhandling.cpp	/^std::string Exception::getExceptionClass() const { return exceptionClass; }$/;"	f	class:Exception
+getFile	errorhandling.cpp	/^std::string Exception::getFile() const{ return file; }$/;"	f	class:Exception
+getFunction	errorhandling.cpp	/^std::string Exception::getFunction() const{ return function; }$/;"	f	class:Exception
+getLine	errorhandling.cpp	/^int Exception::getLine() const{ return line; }$/;"	f	class:Exception
+get_long	console_arguments.cpp	/^const char* ParameterBaseImpl::get_long() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+get_memory_page_size	miscellaneous.cpp	/^size_t get_memory_page_size() {$/;"	f
+get_parent	slh17/pma.cpp	/^int64_t PMA::get_parent(int64_t left_location, int level) const {$/;"	f	class:pma::sha::PMA
+get_short	console_arguments.cpp	/^char ParameterBaseImpl::get_short() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+git_last_commit	miscellaneous.cpp	/^string git_last_commit(){$/;"	f
+handle_argument	console_arguments.cpp	/^clara::Opt handle_argument<bool>(ParameterImpl<bool>& impl){$/;"	f	namespace:configuration::details
+handle_argument	console_arguments.hpp	/^clara::Opt handle_argument(ParameterImpl<T>& impl){$/;"	f	namespace:configuration::details
+hasNext	btreepma_v2.cpp	/^bool IteratorImpl::hasNext() const{$/;"	f	class:pma::IteratorImpl
+hasNext	slh17/pma.cpp	/^bool Iterator::hasNext() const {$/;"	f	class:pma::sha::Iterator
+has_alias	console_arguments.cpp	/^bool ParameterBaseImpl::has_alias(const char* alias) const{$/;"	f	class:configuration::details::ParameterBaseImpl
+has_description	clara.hpp	/^        bool has_description() const {$/;"	f	class:clara::detail::ParserRefImpl
+has_hint	console_arguments.cpp	/^bool ParameterBaseImpl::has_hint() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+has_long_option	console_arguments.cpp	/^bool ParameterBaseImpl::has_long_option() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+has_short_option	console_arguments.cpp	/^bool ParameterBaseImpl::has_short_option() const{$/;"	f	class:configuration::details::ParameterBaseImpl
+hint	console_arguments.cpp	/^const std::string& ParameterBaseImpl::hint() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+hint	console_arguments.hpp	/^    decltype(auto) hint(){$/;"	f	class:configuration::details::TypedParameter
+hint	console_arguments.hpp	/^    decltype(auto) hint(const std::string& value) {$/;"	f	class:configuration::details::TypedParameter
+hostname	miscellaneous.cpp	/^string hostname() {$/;"	f
+hyperceil	btreepma_v2.cpp	/^static size_t hyperceil(size_t value){$/;"	f	namespace:pma
+hyperceil	miscellaneous.cpp	/^size_t hyperceil(size_t value){$/;"	f
+index	btreepma_v2.hpp	/^    btree_pma_v2_detail::BTree index;$/;"	m	class:pma::BTreePMA_v2
+index_initialize	btreepma_v2.cpp	/^BTree BTreePMA_v2::index_initialize(size_t index_B, size_t storage_B){$/;"	f	class:pma::BTreePMA_v2
+index_initialize	btreepma_v2.cpp	/^BTree BTreePMA_v2::index_initialize(size_t intnode_a, size_t intnode_b, size_t leaf_a, size_t leaf_b, size_t storage_a, size_t storage_b){$/;"	f	class:pma::BTreePMA_v2
+index_leaf_augment	btreepma_v2.cpp	/^void BTreePMA_v2::index_leaf_augment(Leaf* leaf, size_t pos){$/;"	f	class:pma::BTreePMA_v2
+index_split_node	btreepma_v2.cpp	/^void BTreePMA_v2::index_split_node(InternalNode* inode, size_t child){$/;"	f	class:pma::BTreePMA_v2
+index_split_root	btreepma_v2.cpp	/^void BTreePMA_v2::index_split_root(){$/;"	f	class:pma::BTreePMA_v2
+init_pma	slh17/pma.cpp	/^void PMA::init_pma(){$/;"	f	class:pma::sha::PMA
+insert	btreepma_v2.cpp	/^void BTreePMA_v2::insert(Node* node, int64_t key, int64_t value){$/;"	f	class:pma::BTreePMA_v2
+insert	btreepma_v2.cpp	/^void BTreePMA_v2::insert(int64_t key, int64_t value){$/;"	f	class:pma::BTreePMA_v2
+insert	slh17/pma.cpp	/^void PMA::insert(int64_t key, int64_t value){$/;"	f	class:pma::sha::PMA
+insert_empty	btreepma_v2.cpp	/^void BTreePMA_v2::insert_empty(int64_t key, int64_t value){$/;"	f	class:pma::BTreePMA_v2
+insert_leaf	btreepma_v2.cpp	/^void BTreePMA_v2::insert_leaf(Leaf* leaf, int64_t key, int64_t value){$/;"	f	class:pma::BTreePMA_v2
+insert_pma	slh17/pma.cpp	/^void PMA::insert_pma(ELEMENT_TYPE element) {$/;"	f	class:pma::sha::PMA
+insert_storage	btreepma_v2.cpp	/^void BTreePMA_v2::insert_storage(Leaf* leaf, size_t index_leaf, int64_t key, int64_t value){$/;"	f	class:pma::BTreePMA_v2
+interface	console_arguments.hpp	/^    decltype(auto) interface(char option_short, const char* option_long){$/;"	f	class:configuration::details::TypedParameter
+interface	console_arguments.hpp	/^    decltype(auto) interface(char option_short, const char* option_long, const std::string& hint){$/;"	f	class:configuration::details::TypedParameter
+intnode_a	btreepma_v2.hpp	/^    const size_t intnode_a; \/\/ lower bound for internal nodes$/;"	m	struct:pma::btree_pma_v2_detail::BTree
+intnode_b	btreepma_v2.hpp	/^    const size_t intnode_b; \/\/ upper bound for internal nodes$/;"	m	struct:pma::btree_pma_v2_detail::BTree
+isValid	clara.hpp	/^        static const bool isValid = false;$/;"	m	struct:clara::detail::UnaryLambdaTraits
+isValid	clara.hpp	/^        static const bool isValid = true;$/;"	m	struct:clara::detail::UnaryLambdaTraits
+is_default	console_arguments.hpp	/^    bool is_default() const { return m_impl->is_default(); }$/;"	f	class:configuration::details::TypedParameterRef
+is_leaf	btreepma_v2.hpp	/^    const bool is_leaf : 8; \/\/ is this an InnerNode or a Leaf?$/;"	m	struct:pma::btree_pma_v2_detail::Node
+is_power_of_2	miscellaneous.hpp	/^bool is_power_of_2(T x){$/;"	f
+is_recorded	console_arguments.cpp	/^bool ParameterBaseImpl::is_recorded() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+is_required	console_arguments.cpp	/^bool ParameterBaseImpl::is_required() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+is_set	console_arguments.hpp	/^    bool is_set() const { return m_impl->is_set(); }$/;"	f	class:configuration::details::TypedParameterRef
+itEnd	clara.hpp	/^        Iterator itEnd;$/;"	m	class:clara::detail::TokenStream
+iterator	btreepma_v2.cpp	/^std::unique_ptr<pma::Iterator> BTreePMA_v2::iterator() const{$/;"	f	class:pma::BTreePMA_v2
+iterator	clara.hpp	/^            explicit iterator( Column const& column ) : m_column( column ) {$/;"	f	class:clara::TextFlow::Column::iterator
+iterator	clara.hpp	/^            explicit iterator( Columns const& columns )$/;"	f	class:clara::TextFlow::Columns::iterator
+iterator	clara.hpp	/^            iterator( Column const& column, size_t stringIndex )$/;"	f	class:clara::TextFlow::Column::iterator
+iterator	clara.hpp	/^            iterator( Columns const& columns, EndTag )$/;"	f	class:clara::TextFlow::Columns::iterator
+iterator	clara.hpp	/^        class iterator {$/;"	c	class:clara::TextFlow::Column
+iterator	clara.hpp	/^        class iterator {$/;"	c	class:clara::TextFlow::Columns
+iterator	interface.cpp	/^std::unique_ptr<Iterator> InterfaceRQ::iterator() const {$/;"	f	class:pma::InterfaceRQ
+iterator	slh17/pma.cpp	/^std::unique_ptr<::pma::Iterator> PMA::iterator() const {$/;"	f	class:pma::sha::PMA
+key	btreepma_v2.hpp	/^    K key;$/;"	m	struct:pma::btree_pma_v2_detail::PMA_Element
+key_max	btreepma_v2.hpp	/^    int64_t key_max;$/;"	m	class:pma::btree_pma_v2_detail::IteratorImpl
+keys	btreepma_v2.cpp	/^int64_t* BTreePMA_v2::keys(const InternalNode* inode) const{$/;"	f	class:pma::BTreePMA_v2
+keys	btreepma_v2.cpp	/^int64_t* BTreePMA_v2::keys(const Leaf* leaf) const {$/;"	f	class:pma::BTreePMA_v2
+leaf_a	btreepma_v2.hpp	/^    const size_t leaf_a; \/\/ lower bound for leaves$/;"	m	struct:pma::btree_pma_v2_detail::BTree
+leaf_b	btreepma_v2.hpp	/^    const size_t leaf_b; \/\/ upper bound for leaves$/;"	m	struct:pma::btree_pma_v2_detail::BTree
+left	clara.hpp	/^        std::string left;$/;"	m	struct:clara::detail::HelpColumns
+line	console_arguments.cpp	/^int ParameterBaseImpl::line() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+line	errorhandling.hpp	/^    int line; \/\/ related line where the exception has been raised$/;"	m	class:Exception
+loadBuffer	clara.hpp	/^        void loadBuffer() {$/;"	f	class:clara::detail::TokenStream
+locate_segment	slh17/pma.cpp	/^int64_t PMA::locate_segment(int64_t key) const { \/\/ value$/;"	f	class:pma::sha::PMA
+lower_element_	slh17/pma.hpp	/^    std::vector<int64_t> lower_element_;$/;"	m	class:pma::sha::PMA
+m_activeIterators	clara.hpp	/^            size_t m_activeIterators;$/;"	m	class:clara::TextFlow::Columns::iterator
+m_aliases	console_arguments.hpp	/^    std::vector<ParameterProperty<std::string>> m_aliases; \/\/ aliases for the code$/;"	m	class:configuration::details::ParameterBaseImpl
+m_args	clara.hpp	/^        std::vector<Arg> m_args;$/;"	m	struct:clara::detail::Parser
+m_args	clara.hpp	/^        std::vector<std::string> m_args;$/;"	m	class:clara::detail::Args
+m_capacity	btreepma_v2.hpp	/^    size_t m_capacity; \/\/ the size of the array elements$/;"	m	struct:pma::btree_pma_v2_detail::PMA
+m_cardinality	btreepma_v2.hpp	/^    size_t m_cardinality; \/\/ the number of elements contained$/;"	m	struct:pma::btree_pma_v2_detail::PMA
+m_column	clara.hpp	/^            Column const& m_column;$/;"	m	class:clara::TextFlow::Column::iterator
+m_columns	clara.hpp	/^            std::vector<Column> const& m_columns;$/;"	m	class:clara::TextFlow::Columns::iterator::std
+m_columns	clara.hpp	/^        std::vector<Column> m_columns;$/;"	m	class:clara::TextFlow::Columns
+m_console_parameters	configuration.hpp	/^    std::vector<details::ParameterBaseImpl*> m_console_parameters;$/;"	m	class:configuration::Configuration
+m_description	clara.hpp	/^        std::string m_description;$/;"	m	class:clara::detail::ParserRefImpl
+m_description	console_arguments.hpp	/^    ParameterProperty<std::string> m_description; \/\/ the description showed in the `help prompt'$/;"	m	class:configuration::details::ParameterBaseImpl
+m_elements	btreepma_v2.hpp	/^    element_t* m_elements; \/\/ the elements contained$/;"	m	struct:pma::btree_pma_v2_detail::PMA
+m_end	clara.hpp	/^            size_t m_end = 0;$/;"	m	class:clara::TextFlow::Column::iterator
+m_errorMessage	clara.hpp	/^        std::string m_errorMessage; \/\/ Only populated if resultType is an error$/;"	m	class:clara::detail::BasicResult
+m_exeName	clara.hpp	/^        mutable ExeName m_exeName;$/;"	m	struct:clara::detail::Parser
+m_exeName	clara.hpp	/^        std::string m_exeName;$/;"	m	class:clara::detail::Args
+m_first_key	interface.hpp	/^        int64_t m_first_key =0; \/\/ the first key that qualifies inside the interval [min, max]. Undefined if m_num_elements == 0$/;"	m	struct:pma::Interface::SumResult
+m_height	btreepma_v2.hpp	/^    size_t m_height; \/\/ the height of the binary tree for elements$/;"	m	struct:pma::btree_pma_v2_detail::PMA
+m_hint	clara.hpp	/^        std::string m_hint;$/;"	m	class:clara::detail::ParserRefImpl
+m_impl	console_arguments.hpp	/^    ParameterImpl<T>* m_impl = nullptr; \/\/ Base class for the implementation$/;"	m	class:configuration::details::TypedParameterRef
+m_indent	clara.hpp	/^        size_t m_indent = 0;$/;"	m	class:clara::TextFlow::Column
+m_initialIndent	clara.hpp	/^        size_t m_initialIndent = std::string::npos;$/;"	m	class:clara::TextFlow::Column
+m_iterators	clara.hpp	/^            std::vector<Column::iterator> m_iterators;$/;"	m	class:clara::TextFlow::Columns::iterator
+m_lambda	clara.hpp	/^        L m_lambda;$/;"	m	struct:clara::detail::BoundFlagLambda
+m_lambda	clara.hpp	/^        L m_lambda;$/;"	m	struct:clara::detail::BoundLambda
+m_last_key	interface.hpp	/^        int64_t m_last_key =0; \/\/ the last key that qualifies inside the interval [min, max]. Undefined if m_num_elements == 0$/;"	m	struct:pma::Interface::SumResult
+m_len	clara.hpp	/^            size_t m_len = 0;$/;"	m	class:clara::TextFlow::Column::iterator
+m_line	console_arguments.hpp	/^    const int m_line; \/\/ The source line where this wrapper has been instantiated$/;"	m	class:configuration::details::ParameterBase
+m_line	console_arguments.hpp	/^    int m_line = -1; \/\/ the source line where the property has been set$/;"	m	struct:configuration::details::ParameterProperty
+m_long	console_arguments.hpp	/^    ParameterProperty<std::string> m_long; \/\/ long option, e.g. --experiment$/;"	m	class:configuration::details::ParameterBaseImpl
+m_name	clara.hpp	/^        std::shared_ptr<std::string> m_name;$/;"	m	class:clara::detail::ExeName
+m_name	console_arguments.hpp	/^    ParameterProperty<const char*> m_name; \/\/ the parameter name, used as identifier to search for a parameter and also the id stored in the results database$/;"	m	class:configuration::details::ParameterBaseImpl
+m_num_elements	interface.hpp	/^        uint64_t m_num_elements =0; \/\/ the total number of elements inside the interval [min, max]$/;"	m	struct:pma::Interface::SumResult
+m_optNames	clara.hpp	/^        std::vector<std::string> m_optNames;$/;"	m	class:clara::detail::Opt
+m_optionality	clara.hpp	/^        Optionality m_optionality = Optionality::Optional;$/;"	m	class:clara::detail::ParserRefImpl
+m_options	clara.hpp	/^        std::vector<Opt> m_options;$/;"	m	struct:clara::detail::Parser
+m_pos	clara.hpp	/^            size_t m_pos = 0;$/;"	m	class:clara::TextFlow::Column::iterator
+m_ref	clara.hpp	/^        T &m_ref;$/;"	m	struct:clara::detail::BoundValueRef
+m_ref	clara.hpp	/^        bool &m_ref;$/;"	m	struct:clara::detail::BoundFlagRef
+m_ref	clara.hpp	/^        std::shared_ptr<BoundRef> m_ref;$/;"	m	class:clara::detail::ParserRefImpl
+m_ref	clara.hpp	/^        std::shared_ptr<BoundValueRefBase> m_ref;$/;"	m	class:clara::detail::ExeName
+m_ref	clara.hpp	/^        std::vector<T> &m_ref;$/;"	m	struct:clara::detail::BoundValueRef
+m_remainingTokens	clara.hpp	/^        TokenStream m_remainingTokens;$/;"	m	class:clara::detail::ParseState
+m_required	console_arguments.hpp	/^    ParameterProperty<bool> m_required; \/\/ the parameter must be set$/;"	m	class:configuration::details::ParameterBaseImpl
+m_segment_capacity	btreepma_v2.hpp	/^    size_t m_segment_capacity; \/\/ the capacity of a single segment$/;"	m	struct:pma::btree_pma_v2_detail::PMA
+m_short	console_arguments.hpp	/^    ParameterProperty<char> m_short; \/\/ short option (if given), e.g. -e$/;"	m	class:configuration::details::ParameterBaseImpl
+m_source	console_arguments.hpp	/^    const char* m_source = nullptr; \/\/ the source file where the property has been set$/;"	m	struct:configuration::details::ParameterProperty
+m_source	console_arguments.hpp	/^    const char* m_source; \/\/ The source file where this wrapper has been instantiated$/;"	m	class:configuration::details::ParameterBase
+m_state	console_arguments.hpp	/^    State m_state = State::UNSET; \/\/ whether this property has been explicitly set$/;"	m	struct:configuration::details::ParameterProperty
+m_stringIndex	clara.hpp	/^            size_t m_stringIndex = 0;$/;"	m	class:clara::TextFlow::Column::iterator
+m_strings	clara.hpp	/^        std::vector<std::string> m_strings;$/;"	m	class:clara::TextFlow::Column
+m_suffix	clara.hpp	/^            bool m_suffix = false;$/;"	m	class:clara::TextFlow::Column::iterator
+m_sum_keys	interface.hpp	/^        int64_t m_sum_keys =0; \/\/ the aggregate sum of all keys in the interval [min, max]$/;"	m	struct:pma::Interface::SumResult
+m_sum_values	interface.hpp	/^        int64_t m_sum_values =0; \/\/ the aggregate sum of all values in the interval [min, max]$/;"	m	struct:pma::Interface::SumResult
+m_tokenBuffer	clara.hpp	/^        std::vector<Token> m_tokenBuffer;$/;"	m	class:clara::detail::TokenStream
+m_type	clara.hpp	/^        ParseResultType m_type;$/;"	m	class:clara::detail::ParseState
+m_type	clara.hpp	/^        Type m_type;$/;"	m	class:clara::detail::ResultBase
+m_validate	console_arguments.hpp	/^    std::unique_ptr<ParameterValidateBase<T>> m_validate;$/;"	m	class:configuration::details::ParameterImpl
+m_value	clara.hpp	/^            T m_value;$/;"	m	union:clara::detail::ResultValueBase::__anon1
+m_value	console_arguments.hpp	/^    ParameterProperty<T> m_value;$/;"	m	class:configuration::details::ParameterImpl
+m_value	console_arguments.hpp	/^    T m_value; \/\/ the actual value contained$/;"	m	struct:configuration::details::ParameterProperty
+m_verbose	configuration.hpp	/^    details::ParameterImpl<bool>* m_verbose = nullptr;$/;"	m	class:configuration::Configuration
+m_width	clara.hpp	/^        size_t m_width = CLARA_TEXTFLOW_CONFIG_CONSOLE_WIDTH;$/;"	m	class:clara::TextFlow::Column
+main	rma.cpp	/^int main() {$/;"	f
+memory_footprint	interface.cpp	/^size_t Interface::memory_footprint() const{$/;"	f	class:pma::Interface
+move_next	slh17/pma.cpp	/^void Iterator::move_next(){$/;"	f	class:pma::sha::Iterator
+name	console_arguments.cpp	/^const char* ParameterBaseImpl::name() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+name	console_arguments.hpp	/^    const char* name() const {$/;"	f	class:configuration::details::TypedParameterRef
+next	btreepma_v2.cpp	/^std::pair<int64_t, int64_t> IteratorImpl::next(){$/;"	f	class:pma::IteratorImpl
+next	btreepma_v2.hpp	/^    Leaf* next;$/;"	m	struct:pma::btree_pma_v2_detail::Leaf
+next	slh17/pma.cpp	/^std::pair<int64_t, int64_t> Iterator::next() {$/;"	f	class:pma::sha::Iterator
+operator <<	btreepma_v2.hpp	/^std::ostream& operator<<(std::ostream& out, const PMA_Element<K, V>& element){$/;"	f	namespace:pma::btree_pma_v2_detail
+operator <<	clara.hpp	/^        inline friend std::ostream& operator << ( std::ostream& os, Column const& col ) {$/;"	f	class:clara::TextFlow::Column
+operator <<	clara.hpp	/^        inline friend std::ostream& operator << ( std::ostream& os, Columns const& cols ) {$/;"	f	class:clara::TextFlow::Columns
+operator <<	errorhandling.cpp	/^std::ostream& operator<<(std::ostream& out, Exception& e){$/;"	f
+operator <<	interface.cpp	/^std::ostream& operator<<(std::ostream& out, const Interface::SumResult& sum){$/;"	f	namespace:pma
+operator T	console_arguments.hpp	/^    operator T() const{ return get(); }$/;"	f	class:configuration::details::TypedParameterRef
+operator []	console_arguments.hpp	/^    decltype(auto) operator[](const char* value){$/;"	f	class:configuration::details::TypedParameter
+operator bool	clara.hpp	/^        explicit operator bool() const { return m_type == ResultBase::Ok; }$/;"	f	class:clara::detail::BasicResult
+operator bool	clara.hpp	/^        explicit operator bool() const {$/;"	f	class:clara::detail::TokenStream
+option_long	console_arguments.hpp	/^    decltype(auto) option_long(const char* value) {$/;"	f	class:configuration::details::TypedParameter
+option_short	console_arguments.hpp	/^    decltype(auto) option_short(char value){$/;"	f	class:configuration::details::TypedParameter
+override	btreepma_v2.hpp	/^    virtual SumResult sum(int64_t min, int64_t max) const override;$/;"	m	class:pma::BTreePMA_v2
+override	btreepma_v2.hpp	/^    virtual int64_t find(int64_t key) const override;$/;"	m	class:pma::BTreePMA_v2
+override	btreepma_v2.hpp	/^    virtual size_t size() const override;$/;"	m	class:pma::BTreePMA_v2
+override	btreepma_v2.hpp	/^    virtual std::unique_ptr<pma::Iterator> find(int64_t min, int64_t max) const override;$/;"	m	class:pma::BTreePMA_v2
+override	btreepma_v2.hpp	/^    virtual std::unique_ptr<pma::Iterator> iterator() const override;$/;"	m	class:pma::BTreePMA_v2
+override	btreepma_v2.hpp	/^    virtual void dump() const override;$/;"	m	class:pma::BTreePMA_v2
+override	btreepma_v2.hpp	/^    void insert(int64_t key, int64_t value) override;$/;"	m	class:pma::BTreePMA_v2
+override	slh17/pma.hpp	/^    SumResult sum(int64_t min, int64_t max) const override;$/;"	m	class:pma::sha::PMA
+override	slh17/pma.hpp	/^    bool hasNext() const override;$/;"	m	class:pma::sha::Iterator
+override	slh17/pma.hpp	/^    int64_t find(int64_t key) const override;$/;"	m	class:pma::sha::PMA
+override	slh17/pma.hpp	/^    std::pair<int64_t, int64_t> next() override;$/;"	m	class:pma::sha::Iterator
+override	slh17/pma.hpp	/^    std::size_t size() const override;$/;"	m	class:pma::sha::PMA
+override	slh17/pma.hpp	/^    std::unique_ptr<pma::Iterator> find(int64_t min, int64_t max) const override;$/;"	m	class:pma::sha::PMA
+override	slh17/pma.hpp	/^    std::unique_ptr<pma::Iterator> iterator() const override;$/;"	m	class:pma::sha::PMA
+override	slh17/pma.hpp	/^    void dump() const override;$/;"	m	class:pma::sha::PMA
+override	slh17/pma.hpp	/^    void insert(int64_t key, int64_t value) override;$/;"	m	class:pma::sha::PMA
+param_to_string	console_arguments.cpp	/^string param_to_string(const ParameterImpl<bool>& impl){$/;"	f	namespace:configuration::details
+param_to_string	console_arguments.hpp	/^std::string param_to_string(const ParameterImpl<T>& impl){$/;"	f	namespace:configuration::details
+parameter	console_arguments.hpp	/^configuration::details::TypedParameter<T> parameter(const char* name, const char* source, int line){$/;"	f	namespace:configuration
+parse_command_line_args	configuration.cpp	/^void Configuration::parse_command_line_args(int argc, char* argv[]){$/;"	f	class:configuration::Configuration
+pin_thread_to_numa_node	miscellaneous.cpp	/^void pin_thread_to_numa_node(int numa_node){$/;"	f
+pma	btreepma_v2.cpp	/^namespace pma {$/;"	n	file:
+pma	btreepma_v2.hpp	/^namespace pma {$/;"	n
+pma	interface.cpp	/^namespace pma {$/;"	n	file:
+pma	interface.hpp	/^namespace pma {$/;"	n
+pma	iterator.hpp	/^namespace pma {$/;"	n
+pma	slh17/pma.cpp	/^namespace pma { namespace sha {$/;"	n	file:
+pma	slh17/pma.hpp	/^namespace pma { namespace sha {$/;"	n
+pos	btreepma_v2.hpp	/^    size_t pos;$/;"	m	class:pma::btree_pma_v2_detail::IteratorImpl
+prev	btreepma_v2.hpp	/^    Leaf* prev;$/;"	m	struct:pma::btree_pma_v2_detail::Leaf
+project_buffer	slh17/pma.cpp	/^void PMA::project_buffer(int64_t head, int64_t rear) {$/;"	f	class:pma::sha::PMA
+ptr_elements_t	miscellaneous.hpp	/^typedef std::unique_ptr<std::pair<int64_t, int64_t>[]> ptr_elements_t;$/;"	t
+r_0	btreepma_v2.hpp	/^    static constexpr double r_0 = 0.5; \/\/ highest threshold for the lower bound$/;"	m	class:pma::BTreePMA_v2
+random_string	miscellaneous.cpp	/^string random_string(size_t length){$/;"	f
+real_idx_	slh17/pma.hpp	/^    int64_t real_idx_;$/;"	m	class:pma::sha::Iterator
+rebalance	slh17/pma.cpp	/^void PMA::rebalance(int64_t left_location, int level){$/;"	f	class:pma::sha::PMA
+recalculate_density	slh17/pma.cpp	/^void PMA::recalculate_density(){$/;"	f	class:pma::sha::PMA
+record	console_arguments.hpp	/^    decltype(auto) record(bool value = true){$/;"	f	class:configuration::details::TypedParameter
+ref	console_arguments.hpp	/^    static ParameterImpl<T>* ref(const char* name, const char* source, int line){$/;"	f	class:configuration::details::TypedParameter
+register_generic_impl	console_arguments.cpp	/^void ParameterBase::register_generic_impl(ParameterBaseImpl* impl){$/;"	f	class:configuration::details::ParameterBase
+remove	interface.cpp	/^int64_t Interface::remove(int64_t key){$/;"	f	class:pma::Interface
+required	console_arguments.hpp	/^    decltype(auto) required(){$/;"	f	class:configuration::details::TypedParameter
+resize	slh17/pma.cpp	/^void PMA::resize(int64_t size) {$/;"	f	class:pma::sha::PMA
+right	clara.hpp	/^        std::string right;$/;"	m	struct:clara::detail::HelpColumns
+root	btreepma_v2.hpp	/^    Node* root; \/\/ current root$/;"	m	struct:pma::btree_pma_v2_detail::BTree
+segment_length_	slh17/pma.hpp	/^    int64_t segment_length_;$/;"	m	class:pma::sha::PMA
+set	console_arguments.hpp	/^    void set(const T& value, const char* source, int line) {$/;"	f	struct:configuration::details::ParameterProperty
+set	console_arguments.hpp	/^    void set(const T& value, const char* source, int line){$/;"	f	class:configuration::details::ParameterImpl
+set_default	console_arguments.hpp	/^    decltype(auto) set_default(const T& value){$/;"	f	class:configuration::details::TypedParameter
+set_default	console_arguments.hpp	/^    void set_default(const T& value, const char* source, int line){$/;"	f	class:configuration::details::ParameterImpl
+set_description	console_arguments.cpp	/^void ParameterBaseImpl::set_description(const string& value, const char* source, int line) {$/;"	f	class:configuration::details::ParameterBaseImpl
+set_forced	console_arguments.hpp	/^    decltype(auto) set_forced(const T& value){$/;"	f	class:configuration::details::TypedParameter
+set_hint	console_arguments.cpp	/^void ParameterBaseImpl::set_hint(const std::string& value, const char* source, int line){$/;"	f	class:configuration::details::ParameterBaseImpl
+set_long	console_arguments.cpp	/^void ParameterBaseImpl::set_long(const char* value, const char* source, int line){$/;"	f	class:configuration::details::ParameterBaseImpl
+set_record_in_database	console_arguments.cpp	/^void ParameterBaseImpl::set_record_in_database(bool value, const char* source, int line){$/;"	f	class:configuration::details::ParameterBaseImpl
+set_required	console_arguments.cpp	/^void ParameterBaseImpl::set_required(const char* source, int line){$/;"	f	class:configuration::details::ParameterBaseImpl
+set_short	console_arguments.cpp	/^void ParameterBaseImpl::set_short(char value, const char* source, int line){$/;"	f	class:configuration::details::ParameterBaseImpl
+set_validate_fn	console_arguments.hpp	/^    void set_validate_fn(Callable fn){$/;"	f	class:configuration::details::ParameterImpl
+sha	slh17/pma.cpp	/^namespace pma { namespace sha {$/;"	n	namespace:pma	file:
+sha	slh17/pma.hpp	/^namespace pma { namespace sha {$/;"	n	namespace:pma
+shuffle_array	miscellaneous.cpp	/^static void shuffle_array(uint64_t seed, pair<int64_t, int64_t>* array, size_t N){$/;"	f	file:
+singleton	configuration.cpp	/^Configuration Configuration::singleton;$/;"	m	class:configuration::Configuration	file:
+singleton	configuration.hpp	/^    static Configuration singleton;$/;"	m	class:configuration::Configuration
+size	btreepma_v2.cpp	/^size_t BTreePMA_v2::size() const {$/;"	f	class:pma::BTreePMA_v2
+size	slh17/pma.cpp	/^size_t PMA::size() const {$/;"	f	class:pma::sha::PMA
+source	console_arguments.cpp	/^const char*ParameterBaseImpl::source() const {$/;"	f	class:configuration::details::ParameterBaseImpl
+split	miscellaneous.cpp	/^vector<string> split(const string& s, char delimiter){$/;"	f
+storage	btreepma_v2.hpp	/^    btree_pma_v2_detail::PMA storage;$/;"	m	class:pma::BTreePMA_v2
+storage	btreepma_v2.hpp	/^    const btree_pma_v2_detail::PMA& storage;$/;"	m	class:pma::btree_pma_v2_detail::IteratorImpl
+storage_a	btreepma_v2.hpp	/^    const size_t storage_a; \/\/ lower bound for the number of elements in the PMA$/;"	m	struct:pma::btree_pma_v2_detail::BTree
+storage_b	btreepma_v2.hpp	/^    const size_t storage_b; \/\/ upper bound for the number of elements in the PMA$/;"	m	struct:pma::btree_pma_v2_detail::BTree
+storage_get_num_segments	btreepma_v2.cpp	/^size_t BTreePMA_v2::storage_get_num_segments() const {$/;"	f	class:pma::BTreePMA_v2
+storage_get_segment_cardinality	btreepma_v2.cpp	/^size_t BTreePMA_v2::storage_get_segment_cardinality(size_t segment_id) const{$/;"	f	class:pma::BTreePMA_v2
+storage_initialize	btreepma_v2.cpp	/^void BTreePMA_v2::storage_initialize(size_t capacity) {$/;"	f	class:pma::BTreePMA_v2
+storage_is_cell_empty	btreepma_v2.cpp	/^bool BTreePMA_v2::storage_is_cell_empty(size_t pos) const{$/;"	f	class:pma::BTreePMA_v2
+storage_is_segment_full	btreepma_v2.cpp	/^bool BTreePMA_v2::storage_is_segment_full(size_t segment_id) const {$/;"	f	class:pma::BTreePMA_v2
+storage_min_capacity	btreepma_v2.hpp	/^    static constexpr int storage_min_capacity = 8; \/\/ the minimum capacity of the underlying PMA$/;"	m	class:pma::BTreePMA_v2
+storage_rebalance	btreepma_v2.cpp	/^void BTreePMA_v2::storage_rebalance(Leaf* leaf, size_t index_leaf, size_t index_insert) {$/;"	f	class:pma::BTreePMA_v2
+storage_resize	btreepma_v2.cpp	/^void BTreePMA_v2::storage_resize(){$/;"	f	class:pma::BTreePMA_v2
+storage_set_presence	btreepma_v2.cpp	/^void BTreePMA_v2::storage_set_presence(size_t position){$/;"	f	class:pma::BTreePMA_v2
+storage_shift_right	btreepma_v2.cpp	/^void BTreePMA_v2::storage_shift_right(Leaf* leaf, size_t index_leaf, size_t start, size_t length){$/;"	f	class:pma::BTreePMA_v2
+storage_spread	btreepma_v2.cpp	/^void BTreePMA_v2::storage_spread(Leaf* leaf, size_t index_leaf, size_t num_elements, size_t window_start, size_t window_length){$/;"	f	class:pma::BTreePMA_v2
+storage_thresholds	btreepma_v2.cpp	/^void BTreePMA_v2::storage_thresholds(size_t height, double& out_a, double& out_b) const{$/;"	f	class:pma::BTreePMA_v2
+sum	btreepma_v2.cpp	/^pma::Interface::SumResult BTreePMA_v2::sum(int64_t min, int64_t max) const {$/;"	f	class:pma::BTreePMA_v2
+sum	slh17/pma.cpp	/^pma::Interface::SumResult PMA::sum(int64_t min, int64_t max) const {$/;"	f	class:pma::sha::PMA
+t_0	btreepma_v2.hpp	/^    static constexpr double t_0 = 0.75; \/\/ lowest threshold for the upper bound$/;"	m	class:pma::BTreePMA_v2
+throw_error_numa_not_available	miscellaneous.cpp	/^static void throw_error_numa_not_available(){$/;"	f	file:
+to_size_t	miscellaneous.cpp	/^size_t to_size_t(const string& argument){$/;"	f
+to_string_2f	miscellaneous.cpp	/^string to_string_2f(double v){$/;"	f
+to_string_with_time_suffix	miscellaneous.cpp	/^string to_string_with_time_suffix(uint64_t time, bool is_microseconds){$/;"	f
+to_string_with_unit_suffix	miscellaneous.cpp	/^string to_string_with_unit_suffix(size_t n){$/;"	f
+token	clara.hpp	/^        std::string token;$/;"	m	struct:clara::detail::Token
+tree_height_	slh17/pma.hpp	/^    int64_t tree_height_;$/;"	m	class:pma::sha::PMA
+tuple2str	miscellaneous.cpp	/^string tuple2str(int64_t A[], size_t N){$/;"	f
+type	clara.hpp	/^        TokenType type;$/;"	m	struct:clara::detail::Token
+upper_element_	slh17/pma.hpp	/^    std::vector<int64_t> upper_element_;$/;"	m	class:pma::sha::PMA
+use_huge_pages	configuration.cpp	/^bool use_huge_pages(){$/;"	f	namespace:configuration
+utilitystream	errorhandling.cpp	/^thread_local std::stringstream Exception::utilitystream;$/;"	m	class:Exception	file:
+utilitystream	errorhandling.hpp	/^    static thread_local std::stringstream utilitystream;$/;"	m	class:Exception
+validate	slh17/pma.cpp	/^void PMA::validate() const{$/;"	f	class:pma::sha::PMA
+validate_fn	console_arguments.hpp	/^    decltype(auto) validate_fn(Callable callable){$/;"	f	class:configuration::details::TypedParameter
+value	btreepma_v2.hpp	/^    V value;$/;"	m	struct:pma::btree_pma_v2_detail::PMA_Element
+values	btreepma_v2.cpp	/^uint64_t* BTreePMA_v2::values(const Leaf* leaf) const {$/;"	f	class:pma::BTreePMA_v2
+verbose	configuration.cpp	/^bool Configuration::verbose() const {$/;"	f	class:configuration::Configuration
+writeToStream	clara.hpp	/^        void writeToStream( std::ostream &os ) const {$/;"	f	struct:clara::detail::Parser
+~BTreePMA_v2	btreepma_v2.cpp	/^BTreePMA_v2::~BTreePMA_v2() {$/;"	f	class:pma::BTreePMA_v2
+~Configuration	configuration.cpp	/^Configuration::~Configuration() {$/;"	f	class:configuration::Configuration
+~Interface	interface.cpp	/^Interface::~Interface() { }$/;"	f	class:pma::Interface
+~InterfaceRQ	interface.cpp	/^InterfaceRQ::~InterfaceRQ(){ }$/;"	f	class:pma::InterfaceRQ
+~Iterator	interface.cpp	/^Iterator::~Iterator(){ }$/;"	f	class:pma::Iterator
+~ParameterBase	console_arguments.cpp	/^ParameterBase::~ParameterBase() { }$/;"	f	class:configuration::details::ParameterBase
+~ParameterBaseImpl	console_arguments.cpp	/^ParameterBaseImpl::~ParameterBaseImpl(){ }$/;"	f	class:configuration::details::ParameterBaseImpl
+~ParameterImpl	console_arguments.hpp	/^    ~ParameterImpl<T>() { }$/;"	f	class:configuration::details::ParameterImpl
+~ParameterValidateBase	console_arguments.hpp	/^    virtual ~ParameterValidateBase() { };$/;"	f	struct:configuration::details::ParameterValidateBase
