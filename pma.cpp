@@ -36,7 +36,8 @@ public:
     static constexpr double th = 0.75;
 
     PackedMemoryArray(uint64_t capacity) : capacity(capacity) {
-        segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
+//        segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
+        segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
         data = std::vector<std::optional<int>>(capacity, std::nullopt);
     }
 
@@ -51,11 +52,15 @@ public:
         std::cout << "Array is sorted" << std::endl;
     }
 
-    void print(bool overwrite = false, int highlightNumber = -1) {
+    void print(int segmentSize, bool overwrite = false, int highlightNumber = -1) {
         if (overwrite) {
             std::cout << "\033[2J\033[1;1H";
         }
         for (uint64_t i = 0; i < capacity; i++) {
+            if (i > 0 && segmentSize > 0 && i % segmentSize == 0) {
+                std::cout << " | ";
+            }
+
             if (data[i] != std::nullopt) {
                 if (data[i].value() == highlightNumber) {
                     std::cout << "\033[31m" << data[i].value() << "\033[0m ";
@@ -92,16 +97,13 @@ public:
             if (data[i]) {
                 segmentElements.push_back(data[i].value());
                 numElements++;
+                // clear the segment after copying
+                data[i] = std::nullopt;
             }
         }
 
         double step = static_cast<double>(segmentSizeToRebalance - 1) / (numElements - 1);
         DEBUG_PRINT << "Rebalancing Step: " << step << " between " << left << " and " << right << std::endl;
-
-        // clear the segment
-        for (uint64_t i = left; i < right; i++) {
-            data[i] = std::nullopt;
-        }
 
         for (uint64_t i = 0; i < numElements; i++) {
             data[i * step + left] = segmentElements[i];
@@ -148,9 +150,6 @@ public:
                     break;
                 }
 
-                // re-adjust left and right
-                // There is a neareast left value 
-                //       12     > 12            yes                 4457                 >= 3159          
                 if (nearestLeft >= left && data[nearestLeft] && data[nearestLeft].value() >= value) {
                     right = nearestLeft;
                 } else if (nearestRight <= right && data[nearestRight] && data[nearestRight].value() <= value) {
@@ -164,6 +163,7 @@ public:
         return mid;
     }
 
+    // TODO: store after resizing
     int getTreeHeight() {
         int noOfSegments = capacity / segmentSize;
         if (noOfSegments == 1) return 1;
@@ -172,38 +172,55 @@ public:
         return height;
     }
 
-    // get the segment offset going from the bottom to the requested level
-    // TODO: store those values as in RMA
+    // segment size for a segment is given by 2^l * segmentSize, starting from level 0
+    // we know the position
+    //  left = index - (index % segmentSize);
+    //  right = left + segmentSize;
+    //
+    //                                                     s = 16
+    //                    |                                s = 8
+    //  0 1 2 3 | 4 5 6 7 | 8 9 10 11 | 12 13 14 15        s = 4
+    //  seg size = 4
+    //  el = 10
+    //  level = 1
+    //  size = 2^1 * 4 = 8
+    //  left = 10 - (10 % 8) = 8
+    //  right = 8 + 8 = 16
+    //
+    //  el = 12
+    //  left = 12 - (12 % 8) = 8
+    //  right = 8 + 8 = 16
+    //
+    //  el = 5
+    //  left = 5 - (5 % 8) = 0
+    //  right = 0 + 8 = 8
+    //
+    //
+
     void getSegmentOffset(int level, int index, uint64_t &segmentLeft, uint64_t &segmentRight) {
-        int levelMultiplier = 1;
-        DEBUG_PRINT << "----index: " << index << std::endl;
-        DEBUG_PRINT << "----segmentSize: " << segmentSize << std::endl;
-        segmentLeft = index - (index % segmentSize);
-        segmentRight = segmentLeft + segmentSize;
-
-        //[xxx] Segment Position: 3
-        // Segment Left: 20, Segment Right: 30
-        // Segment Size: 5, Level Multiplier: 2
-        // Index: 21
-
-        for (int i = 1; i < level; i++) {
-            uint64_t segmentPos = (index / (segmentSize * levelMultiplier)) + 1;
-            DEBUG_PRINT << "\n[xxx] Segment Position: " << segmentPos << std::endl;
-            DEBUG_PRINT << "Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
-            DEBUG_PRINT << "Segment Size: " << segmentSize << ", Level Multiplier: " << levelMultiplier << std::endl;
-            DEBUG_PRINT << "Index: " << index << std::endl;
-            DEBUG_PRINT << "Capacity: " << capacity << std::endl;
-
-            if (segmentPos % 2 == 0) {
-                // even, left neighbor
-                segmentLeft -= segmentSize*levelMultiplier;
-            } else {
-                // odd, right neighbor
-                segmentRight += segmentSize*levelMultiplier;
-            }
-            levelMultiplier *= 2;
-        }
+        // TODO: improve naming (windowSize / segmentSize)
+        int windowSize = std::pow(2, level-1) * segmentSize;
+        segmentLeft = index - (index % windowSize);
+        segmentRight = segmentLeft + windowSize;
     }
+
+//    void getSegmentOffset(int level, int index, uint64_t &segmentLeft, uint64_t &segmentRight) {
+//        int levelMultiplier = 1;
+//        segmentLeft = index - (index % segmentSize);
+//        segmentRight = segmentLeft + segmentSize;
+//
+//        for (int i = 1; i < level; i++) {
+//            uint64_t segmentPos = (index / (segmentSize * levelMultiplier)) + 1;
+//            if (segmentPos % 2 == 0) {
+//                // even, left neighbor
+//                segmentLeft -= segmentSize*levelMultiplier;
+//            } else {
+//                // odd, right neighbor
+//                segmentRight += segmentSize*levelMultiplier;
+//            }
+//            levelMultiplier <<= 1;
+//        }
+//    }
 
     double getDensity(uint64_t left, uint64_t right) {
         // if the segment is the root level, we don't
@@ -212,16 +229,12 @@ public:
             return static_cast<double>(totalElements) / capacity;
         }
         int segmentElements = 0;
-        DEBUG_PRINT << "      Checking density between " << left << " and " << right << std::endl;
-        DEBUG_PRINT << "      Total Elements: " << totalElements << std::endl;
-        DEBUG_PRINT << "      Capacity: " << capacity << std::endl;
         for (uint64_t i = left; i < right; i++) {
             if (data[i] != std::nullopt) {
-                DEBUG_PRINT << "[" << i << "]: " << data[i].value() << ", ";
+                // DEBUG_PRINT << "[" << i << "]: " << data[i].value() << ", ";
                 segmentElements++;
             }
         }
-        DEBUG_PRINT << "      Segment Elements: " << segmentElements << std::endl;
         return static_cast<double>(segmentElements) / (right - left);
     }
 
@@ -229,10 +242,19 @@ public:
         capacity *= 2;
         data.resize(capacity, std::nullopt);
 //        segmentSize = static_cast<int>(std::log2(capacity));
-        segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
-
+        //segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
+        segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
     }
 
+    bool checkIfFullAndRebalance() {
+        if (totalElements == capacity) {
+            DEBUG_PRINT << "Root level is full" << std::endl;
+            doubleCapacity();
+            rebalance(0, capacity - 1);
+            return true;
+        }
+        return false;
+    }
 
     // in paper example
     // p2, 11/12 = 0.91 (unbalanced) 10/12 = 0.83 (balanced)
@@ -242,6 +264,8 @@ public:
     // check if the segment is balanced, if not, rebalance and check the upper level
     // if its balanced, check the upper level. If upper level is not balanced, rebalance and check the upper level
     void checkForRebalancing(int index) {
+        if (checkIfFullAndRebalance()) return;
+
         uint64_t segmentLeft = 0;
         uint64_t segmentRight = 0;
         int treeHeight = getTreeHeight();
@@ -254,21 +278,25 @@ public:
         for (int level = 1; level <= treeHeight; level++) {
             getSegmentOffset(level, index, segmentLeft, segmentRight);
             double density = getDensity(segmentLeft, segmentRight);
+
+            // only trigger rebalancing when the bottom segment is full
+            if (level == 1) {
+                // is segment full?
+                // proceed to the upper level
+                if (density == 1) {
+                    continue;
+                } else {
+                // otherwise, we don't need to check
+                    break;
+                }
+            }
+
             double upperThreshold = upperThresholdAtLevel(level);
 
             DEBUG_PRINT << "Level: " << level << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
             DEBUG_PRINT << "Density: " << density << std::endl;
             DEBUG_PRINT << "Upper Threshold: " << upperThreshold << std::endl;
-
-            // check root level
             DEBUG_PRINT << "Total Elements: " << totalElements << ", Capacity: " << capacity << std::endl;
-
-            if (totalElements == capacity) {
-                DEBUG_PRINT << "Root level is full" << std::endl;
-                doubleCapacity();
-                rebalance(0, capacity - 1);
-                return;
-            }
 
             if (density > upperThreshold) {
                 DEBUG_PRINT << "Segment is not balanced" << std::endl;
@@ -278,12 +306,13 @@ public:
                     doubleCapacity();
                     rebalance(0, capacity - 1);
                 } else {
-                    // otherwise, rebalance one level up
-                    // TODO: we have to do this for level all over again to
-                    // make sure the calibrator tree is properly balanced
+                    // otherwise, rebalance the upper segment and continue checking
+                    // the upper levels through the loop
                     getSegmentOffset(level+1, index, segmentLeft, segmentRight);
                     rebalance(segmentLeft, segmentRight);
                 }
+            } else {
+                DEBUG_PRINT << "Segment is balanced" << std::endl;
             }
         }
     }
@@ -391,28 +420,26 @@ void distInsert(PackedMemoryArray& pma) {
     DEBUG_PRINT << "Seed: " << seed << std::endl;
     //std::mt19937 eng(seed);
     std::uniform_int_distribution<> distr(0, 10000);
+
     t.start();
-
-
-    for (int count = 0; count < 17; count++) {
-        int num = distr(eng);
-        pma.insertElement(num);
-        pma.print();
+    for (int count = 0; count < 100000; count++) {
+//        int num = distr(eng);
+        pma.insertElement(count);
+//        pma.print(pma.segmentSize);
 //        pma.insert(count);
 //        pma.print(true, count);
 //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 //        pma.checkIfSorted();
         
     }
-
     double time_taken = t.stop();
     std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
 }
 
 int main() {
-    PackedMemoryArray pma(6 /* initial capacity */);
+    PackedMemoryArray pma(8 /* initial capacity */);
     distInsert(pma);
-//    pma.checkIfSorted();
+    pma.checkIfSorted();
 
     return 0;
 }
