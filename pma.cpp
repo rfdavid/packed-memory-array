@@ -52,6 +52,12 @@ public:
         std::cout << "Array is sorted" << std::endl;
     }
 
+    void printStats() {
+	std::cout << "Capacity: " << capacity << std::endl;
+	std::cout << "Segment Size: " << segmentSize << std::endl;
+	std::cout << "Total Elements: " << totalElements << std::endl;
+    }
+
     void print(int segmentSize, bool overwrite = false, int highlightNumber = -1) {
         if (overwrite) {
             std::cout << "\033[2J\033[1;1H";
@@ -204,27 +210,10 @@ public:
         segmentRight = segmentLeft + windowSize;
     }
 
-//    void getSegmentOffset(int level, int index, uint64_t &segmentLeft, uint64_t &segmentRight) {
-//        int levelMultiplier = 1;
-//        segmentLeft = index - (index % segmentSize);
-//        segmentRight = segmentLeft + segmentSize;
-//
-//        for (int i = 1; i < level; i++) {
-//            uint64_t segmentPos = (index / (segmentSize * levelMultiplier)) + 1;
-//            if (segmentPos % 2 == 0) {
-//                // even, left neighbor
-//                segmentLeft -= segmentSize*levelMultiplier;
-//            } else {
-//                // odd, right neighbor
-//                segmentRight += segmentSize*levelMultiplier;
-//            }
-//            levelMultiplier <<= 1;
-//        }
-//    }
-
     double getDensity(uint64_t left, uint64_t right) {
         // if the segment is the root level, we don't
         // need to perform a full linear search
+
         if (left == 0 && right == capacity) {
             return static_cast<double>(totalElements) / capacity;
         }
@@ -279,16 +268,15 @@ public:
             getSegmentOffset(level, index, segmentLeft, segmentRight);
             double density = getDensity(segmentLeft, segmentRight);
 
-            // only trigger rebalancing when the bottom segment is full
             if (level == 1) {
-                // is segment full?
-                // proceed to the upper level
-                if (density == 1) {
-                    continue;
-                } else {
-                // otherwise, we don't need to check
-                    break;
-                }
+		continue;
+               // only trigger rebalancing when the bottom segment is full
+               if (density == 1) {
+                   continue;
+               } else {
+                   // otherwise, we don't need to check
+                   break;
+               }
             }
 
             double upperThreshold = upperThresholdAtLevel(level);
@@ -313,6 +301,7 @@ public:
                 }
             } else {
                 DEBUG_PRINT << "Segment is balanced" << std::endl;
+                break;
             }
         }
     }
@@ -419,14 +408,14 @@ void distInsert(PackedMemoryArray& pma) {
 
     DEBUG_PRINT << "Seed: " << seed << std::endl;
     //std::mt19937 eng(seed);
-    std::uniform_int_distribution<> distr(0, 10000);
+    std::uniform_int_distribution<> distr(0, 1000000);
 
     t.start();
-    for (int count = 0; count < 100000; count++) {
+    for (int count = 0; count < 10000000; count++) {
 //        int num = distr(eng);
+//        pma.insertElement(num);
         pma.insertElement(count);
 //        pma.print(pma.segmentSize);
-//        pma.insert(count);
 //        pma.print(true, count);
 //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 //        pma.checkIfSorted();
@@ -440,6 +429,7 @@ int main() {
     PackedMemoryArray pma(8 /* initial capacity */);
     distInsert(pma);
     pma.checkIfSorted();
+    pma.printStats();
 
     return 0;
 }
