@@ -18,10 +18,9 @@
 #define DEBUG_PRINT if (false) std::cout
 #endif
 
-
 class PackedMemoryArray {
     public:
-        std::vector<std::optional<int>> data;
+        std::vector<std::optional<std::pair<int, int>>> data;
         uint64_t segmentSize;
         uint64_t capacity;
         uint64_t totalElements = 0;
@@ -36,15 +35,15 @@ class PackedMemoryArray {
         static constexpr double th = 0.75;
 
         PackedMemoryArray(uint64_t capacity) : capacity(capacity) {
-            //        segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
             segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
-            data = std::vector<std::optional<int>>(capacity, std::nullopt);
+            data = std::vector<std::optional<std::pair<int, int>>>(capacity, std::nullopt);
+            // data = std::vector<std::optional<int>>(capacity, std::nullopt);
         }
 
         /* Helper functions */
         void checkIfSorted() {
             for (uint64_t i = 0; i < capacity - 1; i++) {
-                if (data[i] && data[i + 1] && data[i].value() > data[i + 1].value()) {
+                if (data[i] && data[i + 1] && data[i]->first > data[i + 1]->first) {
                     std::cerr << "Array is not sorted" << std::endl;
                     exit(1);
                 }
@@ -68,12 +67,12 @@ class PackedMemoryArray {
                 }
 
                 if (data[i] != std::nullopt) {
-                    if (data[i].value() == highlightNumber) {
-                        std::cout << "\033[31m" << data[i].value() << "\033[0m ";
+                    if (data[i]->first == highlightNumber) {
+                        std::cout << "\033[31m" << data[i]->first << "\033[0m ";
                     } else {
-                        std::cout << data[i].value() << " ";
+                        std::cout << data[i]->first << " (" << data[i]->second << ") ";
 
-                    // std::cout << "[" << i << "] => " << data[i].value() << " ";
+                        // std::cout << "[" << i << "] => " << data[i].value() << " ";
                     }
                 } else {
                     std::cout << "_ ";
@@ -82,13 +81,25 @@ class PackedMemoryArray {
             std::cout << std::endl << std::endl;
         }
 
+        bool elemExistsAt(int index) const {
+            return data[index] != std::nullopt;
+        }
+
+        int64_t elemAt(int index) const {
+            return data[index]->first;
+        }
+
+        uint64_t size() const {
+            return capacity;
+        }
+
         double upperThresholdAtLevel(int level) {
             int height = getTreeHeight();
             // from rma implementation:
             double diff = (((double) height) - level) / height;
             return ph + 0.25 * diff;
 
-//            return th + (t1 - th) * (height - level) / height;
+            //            return th + (t1 - th) * (height - level) / height;
         }
 
         double lowerThresholdAtLevel(int level) {
@@ -101,7 +112,7 @@ class PackedMemoryArray {
             // temporarily store the elements in a vector
             uint64_t numElements = 0;
             int segmentSizeToRebalance = right - left;
-            std::vector<int> segmentElements;
+            std::vector<std::pair<int, int>> segmentElements;
             segmentElements.reserve(segmentSizeToRebalance);
 
             for (uint64_t i = left; i < right; i++) {
@@ -121,36 +132,37 @@ class PackedMemoryArray {
             }
         }
 
-        void insertElement(int value, uint64_t index) {
-            data[index] = value;
+        void insertElement(int key, int value, uint64_t index) {
+            // data[index] = value;
+            data[index] = std::make_pair(key, value);
             totalElements++;
         }
 
-        int binarySearchPMA(int value) {
+        int binarySearchPMA(int key) {
             uint64_t left = 0;
             uint64_t right = capacity - 1;
             uint64_t mid = 0;
 
-            // binary search the value
+            // binary search the key
             while (left <= right) {
                 mid = left + (right - left) / 2;
 
-                // value already exists, do nothing
-                if (data[mid] && data[mid].value() == value) {
-                    DEBUG_PRINT << "Value already exists" << std::endl;
+                // key already exists, do nothing
+                if (data[mid] && data[mid]->first == key) {
+                    DEBUG_PRINT << "key already exists" << std::endl;
                     break;
                 }
 
-                if (data[mid] && data[mid].value() < value) {
+                if (data[mid] && data[mid]->first < key) {
                     left = mid + 1;
-                } else if (data[mid] && data[mid].value() > value) {
+                } else if (data[mid] && data[mid]->first > key) {
                     // prevents underflow here
                     if (mid == 0) {
                         break;
                     }
                     right = mid - 1;
                 } else {
-                    // data[mid] is a gap (std::nullopt), search nearest non-nullopt values
+                    // data[mid] is a gap (std::nullopt), search nearest non-nullopt keys
                     uint64_t nearestLeft = mid,  nearestRight = mid;
 
                     while (nearestLeft > left && !data[nearestLeft]) nearestLeft--;
@@ -161,9 +173,9 @@ class PackedMemoryArray {
                         break;
                     }
 
-                    if (nearestLeft >= left && data[nearestLeft] && data[nearestLeft].value() >= value) {
+                    if (nearestLeft >= left && data[nearestLeft] && data[nearestLeft]->first >= key) {
                         right = nearestLeft;
-                    } else if (nearestRight <= right && data[nearestRight] && data[nearestRight].value() <= value) {
+                    } else if (nearestRight <= right && data[nearestRight] && data[nearestRight]->first <= key) {
                         left = nearestRight;
                     } else {
                         // no valid entries around, or only gaps between left and right
@@ -271,7 +283,7 @@ class PackedMemoryArray {
             for (int level = 1; level <= treeHeight; level++) {
                 getSegmentOffset(level, index, segmentLeft, segmentRight);
                 double density = getDensity(segmentLeft, segmentRight);
-                
+
                 DEBUG_PRINT << "> Level: " << level << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
                 DEBUG_PRINT << "> Density: " << density << std::endl;
                 DEBUG_PRINT << "> Total Elements: " << totalElements << ", Capacity: " << capacity << std::endl;
@@ -343,30 +355,30 @@ class PackedMemoryArray {
             return gapIndex;
         }
 
-        void deleteElement(int value) {
-            uint64_t mid = binarySearchPMA(value);
-            if (data[mid] && data[mid].value() == value) {
+        void deleteElement(int key) {
+            uint64_t mid = binarySearchPMA(key);
+            if (data[mid] && data[mid]->first == key) {
                 data[mid] = std::nullopt;
                 totalElements--;
                 checkForRebalancing(mid);
             }
         }
 
-        void insertElement(int value) {
+        void insertElement(int key, int value) {
             if (capacity == 0) return;
 
-            uint64_t mid = binarySearchPMA(value);
-            DEBUG_PRINT << "Value to insert: " << value << ", desired position: " << mid << std::endl;
+            uint64_t mid = binarySearchPMA(key);
+            DEBUG_PRINT << "Key, Value to insert: " << key << "," << value << " | desired position: " << mid << std::endl;
 
-            // value already exists
-            if (data[mid] && value == data[mid].value()) return;
+            // key already exists
+            if (data[mid] && key == data[mid]->first) return;
 
             // at this point, 'mid' is the most important value here
             // meaning where we want to insert the value
             // if there is a gap, insert the value and that's it 
             if (data[mid] == std::nullopt) {
                 DEBUG_PRINT << "Inserting value: " << value << " at index: " << mid << std::endl;
-                insertElement(value, mid);
+                insertElement(key, value, mid);
                 checkForRebalancing(mid);
                 return;
             } 
@@ -385,7 +397,7 @@ class PackedMemoryArray {
                 DEBUG_PRINT << "Shifting right" << std::endl;
 
                 // bring the gap to the desired position
-                if (value > data[mid].value()) {
+                if (value > data[mid]->first) {
                     mid++;
                 }
 
@@ -395,7 +407,7 @@ class PackedMemoryArray {
             } else {
                 DEBUG_PRINT << "Shifting left" << std::endl;
 
-                if (value < data[mid].value()) {
+                if (value < data[mid]->first) {
                     mid--;
                 }
                 for (uint64_t i = nearestGap; i < mid; i++) {
@@ -404,7 +416,7 @@ class PackedMemoryArray {
             }
 
             // insert the value into mid position
-            insertElement(value, mid);
+            insertElement(key, value, mid);
             checkForRebalancing(mid);
         }
 };
@@ -418,14 +430,14 @@ void distInsert(PackedMemoryArray& pma) {
 
     DEBUG_PRINT << "Seed: " << seed << std::endl;
     //std::mt19937 eng(seed);
-    std::uniform_int_distribution<> distr(0, 1000000);
+    std::uniform_int_distribution<> distr(0, 100000000);
 
     t.start();
     for (int count = 0; count < 10000000; count++) {
-        //        int num = distr(eng);
-        //        pma.insertElement(num);
-        pma.insertElement(count);
-        // pma.print(pma.segmentSize);
+        //       int num = distr(eng);
+        pma.insertElement(count, count);
+        //pma.insertElement(count);
+        //        pma.print(pma.segmentSize);
         //        pma.print(true, count);
         //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         //        pma.checkIfSorted();
