@@ -20,7 +20,7 @@
 
 class PackedMemoryArray {
     public:
-        std::vector<std::optional<std::pair<int, int>>> data;
+        std::vector<std::pair<int, int>> data;
         uint64_t segmentSize;
         uint64_t capacity;
         uint64_t totalElements = 0;
@@ -36,14 +36,13 @@ class PackedMemoryArray {
 
         PackedMemoryArray(uint64_t capacity) : capacity(capacity) {
             segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
-            data = std::vector<std::optional<std::pair<int, int>>>(capacity, std::nullopt);
-            // data = std::vector<std::optional<int>>(capacity, std::nullopt);
+            data = std::vector<std::pair<int, int>>(capacity, std::make_pair(-1, -1));
         }
 
         /* Helper functions */
         void checkIfSorted() {
             for (uint64_t i = 0; i < capacity - 1; i++) {
-                if (data[i] && data[i + 1] && data[i]->first > data[i + 1]->first) {
+                if (data[i].first > 0 && data[i + 1].first > 0 && data[i].first > data[i + 1].first) {
                     std::cerr << "Array is not sorted" << std::endl;
                     exit(1);
                 }
@@ -57,7 +56,7 @@ class PackedMemoryArray {
             std::cout << "Total Elements: " << totalElements << std::endl;
         }
 
-        void print(int segmentSize, bool overwrite = false, int highlightNumber = -1) {
+        void print(int segmentSize = 0, bool overwrite = false, int highlightNumber = -1) {
             if (overwrite) {
                 std::cout << "\033[2J\033[1;1H";
             }
@@ -66,11 +65,11 @@ class PackedMemoryArray {
                     std::cout << " | ";
                 }
 
-                if (data[i] != std::nullopt) {
-                    if (data[i]->first == highlightNumber) {
-                        std::cout << "\033[31m" << data[i]->first << "\033[0m ";
+                if (data[i].first != -1) {
+                    if (data[i].first == highlightNumber) {
+                        std::cout << "\033[31m" << data[i].first << "\033[0m ";
                     } else {
-                        std::cout << data[i]->first << " (" << data[i]->second << ") ";
+                        std::cout << data[i].first << " (" << data[i].second << ") ";
 
                         // std::cout << "[" << i << "] => " << data[i].value() << " ";
                     }
@@ -82,11 +81,11 @@ class PackedMemoryArray {
         }
 
         bool elemExistsAt(int index) const {
-            return data[index] != std::nullopt;
+            return data[index].first != -1;
         }
 
         int64_t elemAt(int index) const {
-            return data[index]->first;
+            return data[index].first;
         }
 
         uint64_t size() const {
@@ -116,11 +115,11 @@ class PackedMemoryArray {
             segmentElements.reserve(segmentSizeToRebalance);
 
             for (uint64_t i = left; i < right; i++) {
-                if (data[i]) {
-                    segmentElements.push_back(data[i].value());
+                if (data[i].first > 0) {
+                    segmentElements.push_back(data[i]);
                     numElements++;
                     // clear the segment after copying
-                    data[i] = std::nullopt;
+                    data[i].first = -1;
                 }
             }
 
@@ -148,34 +147,33 @@ class PackedMemoryArray {
                 mid = left + (right - left) / 2;
 
                 // key already exists, do nothing
-                if (data[mid] && data[mid]->first == key) {
+                if (data[mid].first == key) {
                     DEBUG_PRINT << "key already exists" << std::endl;
                     break;
                 }
 
-                if (data[mid] && data[mid]->first < key) {
+                if (data[mid].first < key) {
                     left = mid + 1;
-                } else if (data[mid] && data[mid]->first > key) {
+                } else if (data[mid].first > key) {
                     // prevents underflow here
                     if (mid == 0) {
                         break;
                     }
                     right = mid - 1;
                 } else {
-                    // data[mid] is a gap (std::nullopt), search nearest non-nullopt keys
                     uint64_t nearestLeft = mid,  nearestRight = mid;
 
-                    while (nearestLeft > left && !data[nearestLeft]) nearestLeft--;
-                    while (nearestRight < right && !data[nearestRight]) nearestRight++;
+                    while (nearestLeft > left && !(data[nearestLeft].first > 0)) nearestLeft--;
+                    while (nearestRight < right && !(data[nearestRight].first > 0)) nearestRight++;
 
                     // no data between left and right
-                    if (!data[nearestLeft] && !data[nearestRight]) {
+                    if (data[nearestLeft].first == -1 && data[nearestRight].first == -1) {
                         break;
                     }
 
-                    if (nearestLeft >= left && data[nearestLeft] && data[nearestLeft]->first >= key) {
+                    if (nearestLeft >= left && data[nearestLeft].first > 0 && data[nearestLeft].first >= key) {
                         right = nearestLeft;
-                    } else if (nearestRight <= right && data[nearestRight] && data[nearestRight]->first <= key) {
+                    } else if (nearestRight <= right && data[nearestRight].first > 0 && data[nearestRight].first <= key) {
                         left = nearestRight;
                     } else {
                         // no valid entries around, or only gaps between left and right
@@ -236,7 +234,7 @@ class PackedMemoryArray {
             }
             int segmentElements = 0;
             for (uint64_t i = left; i < right; i++) {
-                if (data[i] != std::nullopt) {
+                if (data[i].first != -1) {
                     // DEBUG_PRINT << "[" << i << "]: " << data[i].value() << ", ";
                     segmentElements++;
                 }
@@ -246,7 +244,7 @@ class PackedMemoryArray {
 
         void doubleCapacity() {
             capacity *= 2;
-            data.resize(capacity, std::nullopt);
+            data.resize(capacity, std::make_pair(-1,-1));
             //        segmentSize = static_cast<int>(std::log2(capacity));
             //segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
             segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
@@ -284,21 +282,22 @@ class PackedMemoryArray {
                 getSegmentOffset(level, index, segmentLeft, segmentRight);
                 double density = getDensity(segmentLeft, segmentRight);
 
+                if (level == 1) {
+                    // continue;
+
+                    // only trigger rebalancing when the bottom segment appears
+                    // to be full
+                    if (density != 1) {
+                        break;
+                    } else {
+                        continue;
+                    }
+                }
+
                 DEBUG_PRINT << "> Level: " << level << ", Segment Left: " << segmentLeft << ", Segment Right: " << segmentRight << std::endl;
                 DEBUG_PRINT << "> Density: " << density << std::endl;
                 DEBUG_PRINT << "> Total Elements: " << totalElements << ", Capacity: " << capacity << std::endl;
 
-                if (level == 1) {
-                    continue;
-
-                    // only trigger rebalancing when the bottom segment is full
-                    //  if (density == 1) {
-                    //      continue;
-                    //  } else {
-                    //      // otherwise, we don't need to check
-                    //      break;
-                    //  }
-                }
 
                 double upperThreshold = upperThresholdAtLevel(level);
                 DEBUG_PRINT << "> Upper Threshold: " << upperThreshold << std::endl;
@@ -337,14 +336,14 @@ class PackedMemoryArray {
 
             while (leftCursor >= 0 || rightCursor < capacity) {
                 if (rightCursor < capacity) {
-                    if (data[rightCursor] == std::nullopt) {
+                    if (data[rightCursor].first == -1) {
                         gapIndex = rightCursor;
                         break;
                     }
                     rightCursor++;
                 }
                 if (leftCursor >= 0) {
-                    if (data[leftCursor] == std::nullopt) {
+                    if (data[leftCursor].first == -1) {
                         gapIndex = leftCursor;
                         break;
                     }
@@ -357,8 +356,8 @@ class PackedMemoryArray {
 
         void deleteElement(int key) {
             uint64_t mid = binarySearchPMA(key);
-            if (data[mid] && data[mid]->first == key) {
-                data[mid] = std::nullopt;
+            if (data[mid].first == key) {
+                data[mid].first = -1;
                 totalElements--;
                 checkForRebalancing(mid);
             }
@@ -371,12 +370,12 @@ class PackedMemoryArray {
             DEBUG_PRINT << "Key, Value to insert: " << key << "," << value << " | desired position: " << mid << std::endl;
 
             // key already exists
-            if (data[mid] && key == data[mid]->first) return;
+            if (key == data[mid].first) return;
 
             // at this point, 'mid' is the most important value here
             // meaning where we want to insert the value
             // if there is a gap, insert the value and that's it 
-            if (data[mid] == std::nullopt) {
+            if (data[mid].first == -1) {
                 DEBUG_PRINT << "Inserting value: " << value << " at index: " << mid << std::endl;
                 insertElement(key, value, mid);
                 checkForRebalancing(mid);
@@ -392,12 +391,13 @@ class PackedMemoryArray {
             // if nearestGap is greater than mid, shift right
             // if nearestGap is less than mid, shift left
 
+
             if (nearestGap > mid) {
                 // gap found at the right
                 DEBUG_PRINT << "Shifting right" << std::endl;
 
                 // bring the gap to the desired position
-                if (value > data[mid]->first) {
+                if (value > data[mid].first) {
                     mid++;
                 }
 
@@ -407,7 +407,7 @@ class PackedMemoryArray {
             } else {
                 DEBUG_PRINT << "Shifting left" << std::endl;
 
-                if (value < data[mid]->first) {
+                if (value < data[mid].first) {
                     mid--;
                 }
                 for (uint64_t i = nearestGap; i < mid; i++) {
