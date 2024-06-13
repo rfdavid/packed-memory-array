@@ -80,7 +80,7 @@ class PackedMemoryArray {
             std::cout << std::endl << std::endl;
         }
 
-        bool elemExistsAt(int index) const {
+        inline bool elemExistsAt(int index) const {
             return data[index].first != -1;
         }
 
@@ -147,14 +147,14 @@ class PackedMemoryArray {
                 mid = left + (right - left) / 2;
 
                 // key already exists, do nothing
-                if (data[mid].first == key) {
+                if (elemExistsAt(mid) && data[mid].first == key) {
                     DEBUG_PRINT << "key already exists" << std::endl;
                     break;
                 }
 
-                if (data[mid].first < key) {
+                if (elemExistsAt(mid) && data[mid].first < key) {
                     left = mid + 1;
-                } else if (data[mid].first > key) {
+                } else if (elemExistsAt(mid) && data[mid].first > key) {
                     // prevents underflow here
                     if (mid == 0) {
                         break;
@@ -163,17 +163,17 @@ class PackedMemoryArray {
                 } else {
                     uint64_t nearestLeft = mid,  nearestRight = mid;
 
-                    while (nearestLeft > left && !(data[nearestLeft].first > 0)) nearestLeft--;
-                    while (nearestRight < right && !(data[nearestRight].first > 0)) nearestRight++;
+                    while (nearestLeft > left && !elemExistsAt(nearestLeft)) nearestLeft--;
+                    while (nearestRight < right && !elemExistsAt(nearestRight)) nearestRight++;
 
                     // no data between left and right
-                    if (data[nearestLeft].first == -1 && data[nearestRight].first == -1) {
+                    if (!elemExistsAt(nearestLeft) && !elemExistsAt(nearestRight)) {
                         break;
                     }
 
-                    if (nearestLeft >= left && data[nearestLeft].first > 0 && data[nearestLeft].first >= key) {
+                    if (nearestLeft >= left && elemExistsAt(nearestLeft) && data[nearestLeft].first >= key) {
                         right = nearestLeft;
-                    } else if (nearestRight <= right && data[nearestRight].first > 0 && data[nearestRight].first <= key) {
+                    } else if (nearestRight <= right && elemExistsAt(nearestRight) && data[nearestRight].first <= key) {
                         left = nearestRight;
                     } else {
                         // no valid entries around, or only gaps between left and right
@@ -235,7 +235,6 @@ class PackedMemoryArray {
             int segmentElements = 0;
             for (uint64_t i = left; i < right; i++) {
                 if (data[i].first != -1) {
-                    // DEBUG_PRINT << "[" << i << "]: " << data[i].value() << ", ";
                     segmentElements++;
                 }
             }
@@ -283,10 +282,7 @@ class PackedMemoryArray {
                 double density = getDensity(segmentLeft, segmentRight);
 
                 if (level == 1) {
-                    // continue;
-
-                    // only trigger rebalancing when the bottom segment appears
-                    // to be full
+                    // only trigger rebalancing when the bottom segment is full
                     if (density != 1) {
                         break;
                     } else {
@@ -298,10 +294,8 @@ class PackedMemoryArray {
                 DEBUG_PRINT << "> Density: " << density << std::endl;
                 DEBUG_PRINT << "> Total Elements: " << totalElements << ", Capacity: " << capacity << std::endl;
 
-
                 double upperThreshold = upperThresholdAtLevel(level);
                 DEBUG_PRINT << "> Upper Threshold: " << upperThreshold << std::endl;
-
 
                 if (density > upperThreshold) {
                     DEBUG_PRINT << "Segment is not balanced" << std::endl;
@@ -336,14 +330,14 @@ class PackedMemoryArray {
 
             while (leftCursor >= 0 || rightCursor < capacity) {
                 if (rightCursor < capacity) {
-                    if (data[rightCursor].first == -1) {
+                    if (!elemExistsAt(rightCursor)) {
                         gapIndex = rightCursor;
                         break;
                     }
                     rightCursor++;
                 }
                 if (leftCursor >= 0) {
-                    if (data[leftCursor].first == -1) {
+                    if (!elemExistsAt(leftCursor)) {
                         gapIndex = leftCursor;
                         break;
                     }
@@ -364,8 +358,6 @@ class PackedMemoryArray {
         }
 
         void insertElement(int key, int value) {
-            if (capacity == 0) return;
-
             uint64_t mid = binarySearchPMA(key);
             DEBUG_PRINT << "Key, Value to insert: " << key << "," << value << " | desired position: " << mid << std::endl;
 
@@ -375,7 +367,7 @@ class PackedMemoryArray {
             // at this point, 'mid' is the most important value here
             // meaning where we want to insert the value
             // if there is a gap, insert the value and that's it 
-            if (data[mid].first == -1) {
+            if (!elemExistsAt(mid)) {
                 DEBUG_PRINT << "Inserting value: " << value << " at index: " << mid << std::endl;
                 insertElement(key, value, mid);
                 checkForRebalancing(mid);
@@ -397,7 +389,7 @@ class PackedMemoryArray {
                 DEBUG_PRINT << "Shifting right" << std::endl;
 
                 // bring the gap to the desired position
-                if (value > data[mid].first) {
+                if (key > data[mid].first) {
                     mid++;
                 }
 
@@ -407,7 +399,7 @@ class PackedMemoryArray {
             } else {
                 DEBUG_PRINT << "Shifting left" << std::endl;
 
-                if (value < data[mid].first) {
+                if (key < data[mid].first) {
                     mid--;
                 }
                 for (uint64_t i = nearestGap; i < mid; i++) {
@@ -430,17 +422,17 @@ void distInsert(PackedMemoryArray& pma) {
 
     DEBUG_PRINT << "Seed: " << seed << std::endl;
     //std::mt19937 eng(seed);
-    std::uniform_int_distribution<> distr(0, 100000000);
+    std::uniform_int_distribution<> distr(0, 1000);
 
     t.start();
-    for (int count = 0; count < 10000000; count++) {
-        //       int num = distr(eng);
-        pma.insertElement(count, count);
+    for (int count = 0; count < 10000; count++) {
+       int num = distr(eng);
+        pma.insertElement(num, count);
         //pma.insertElement(count);
-        //        pma.print(pma.segmentSize);
+        pma.print(pma.segmentSize);
         //        pma.print(true, count);
         //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        //        pma.checkIfSorted();
+ //       pma.checkIfSorted();
 
     }
     double time_taken = t.stop();
