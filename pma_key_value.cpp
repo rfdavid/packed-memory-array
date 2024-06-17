@@ -22,6 +22,15 @@
 
 class PackedMemoryArray {
     public:
+        // from rma for benchmarking
+        struct SumResult {
+            int64_t m_first_key = 0; // the first key that qualifies inside the interval [min, max]. Undefined if m_num_elements == 0
+            int64_t m_last_key = 0; // the last key that qualifies inside the interval [min, max]. Undefined if m_num_elements == 0
+            uint64_t m_num_elements = 0; // the total number of elements inside the interval [min, max]
+            int64_t m_sum_keys = 0; // the aggregate sum of all keys in the interval [min, max]
+            int64_t m_sum_values = 0; // the aggregate sum of all values in the interval [min, max]
+        };
+
         std::vector<std::optional<std::pair<int, int>>> data;
         uint64_t segmentSize;
         uint64_t capacity;
@@ -58,7 +67,7 @@ class PackedMemoryArray {
             std::cout << "Total Elements: " << totalElements << std::endl;
         }
 
-        void print(int segmentSize, bool overwrite = false, int highlightNumber = -1) {
+        void print(int segmentSize = 0, bool overwrite = false, int highlightNumber = -1) {
             if (overwrite) {
                 std::cout << "\033[2J\033[1;1H";
             }
@@ -80,6 +89,48 @@ class PackedMemoryArray {
             std::cout << std::endl << std::endl;
         }
 
+        // this will be used to benchmark using rma implementation
+        // to simulate a range scan
+        // this implementation is the closest as possible to rma implementation
+        SumResult sum(int64_t min, int64_t max) {
+            uint64_t minPos = binarySearchPMA(min);
+            uint64_t maxPos = binarySearchPMA(max);
+
+            // find the first non-null element 
+            // this element will be the first key in the interval
+            while (minPos < capacity && (data[minPos] == std::nullopt || data[minPos]->first < min)) {
+                minPos++;
+            }
+
+            // find the last non-null element
+            while (maxPos < capacity && (data[maxPos] == std::nullopt || data[maxPos]->first <= max)) {
+                maxPos++;
+            }
+
+            // sum the values in the interval [min, max]
+            SumResult result;
+            result.m_first_key = data[minPos]->first;
+            for (auto i = minPos; i < maxPos; i++) {
+                if (data[i] != std::nullopt) {
+                    result.m_sum_keys += data[i]->first;
+                    result.m_sum_values += data[i]->second;
+                    result.m_num_elements++;
+                }
+            }
+
+            // find the last non-null element
+            result.m_last_key = std::numeric_limits<int64_t>::min();
+            while (result.m_last_key == std::numeric_limits<int64_t>::min() && maxPos > minPos) {
+                if (data[maxPos - 1] != std::nullopt) {
+                    result.m_last_key = data[maxPos -1]->first;
+                } else {
+                    maxPos--;
+                }
+            }
+
+            return result;
+        }
+
         /* PMA Implementation */
 
         bool elemExistsAt(int index) const {
@@ -96,10 +147,13 @@ class PackedMemoryArray {
 
         double upperThresholdAtLevel(int level) {
             int height = getTreeHeight();
-            if (level == height) return th;
+            //            if (level == height) return th;
 
             // from rma implementation:
             double diff = (((double) height) - level) / height;
+
+            //            DEBUG_PRINT << " -------------------------------------------  height " << height << ", level " << level << "  >   th (slow): " << th << ", calculated (fast): " << ph + 0.25 * diff << std::endl;
+
             return ph + 0.25 * diff;
             // return th + (t1 - th) * (height - level) / height;
         }
@@ -129,6 +183,27 @@ class PackedMemoryArray {
         //			write_index -= frequency;
         //		}
         //	}
+
+        //        void halveCapacity() {
+        //            std::vector<std::pair<int, int>> segmentElements;
+        //            capacity /= 2;
+        //            data.resize(capacity, std::nullopt);
+        //            segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
+        //
+        //            for (const auto& element : data) {
+        //                if (element) {
+        //                    segmentElements.push_back(element);
+        //                }
+        //            }
+        //            for (uint64_t i = left; i < right; i++) {
+        //                if (data[i]) {
+        //                    segmentElements.push_back(data[i].value());
+        //                    numElements++;
+        //                    // clear the segment after copying
+        //                    data[i] = std::nullopt;
+        //                }
+        //            }
+        //        }
 
         void rebalance(uint64_t left, uint64_t right) {
             // calculate gaps and elements for that segment
@@ -322,8 +397,7 @@ class PackedMemoryArray {
         void doubleCapacity() {
             capacity *= 2;
             data.resize(capacity, std::nullopt);
-            //        segmentSize = static_cast<int>(std::log2(capacity));
-            //segmentSize = static_cast<int>(std::ceil(std::log2(capacity+1)));
+            // from rma, 2^ceil(log2(log2(n)))
             segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
         }
 
@@ -365,12 +439,12 @@ class PackedMemoryArray {
 
                 if (level == 1) {
                     // only trigger rebalancing when the bottom segment is full
-                     if (density == 1) {
-                         continue;
-                     } else {
-                         // otherwise, we don't need to check
-                         break;
-                     }
+                    if (density == 1) {
+                        continue;
+                    } else {
+                        // otherwise, we don't need to check
+                        break;
+                    }
                 }
 
                 double upperThreshold = upperThresholdAtLevel(level);
@@ -506,10 +580,10 @@ void distInsert(PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 100000000);
 
     t.start();
-    for (int count = 0; count < 1000000; count++) {
+    for (int count = 10; count < 100; count++) {
         //       int num = distr(eng);
         pma.insertElement(count, count);
-        //        pma.print(pma.segmentSize);
+        //pma.print(pma.segmentSize);
         //pma.insertElement(count);
         //        pma.print(true, count);
         //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -520,14 +594,31 @@ void distInsert(PackedMemoryArray& pma) {
     std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
 }
 
+void sumTest(PackedMemoryArray& pma, int64_t min, int64_t max) {
+    PackedMemoryArray::SumResult result = pma.sum(min, max);
+    std::cout << "First Key: " << result.m_first_key << std::endl;
+    std::cout << "Last Key: " << result.m_last_key << std::endl;
+    std::cout << "Sum Keys: " << result.m_sum_keys << std::endl;
+    std::cout << "Sum Values: " << result.m_sum_values << std::endl;
+    std::cout << "Num Elements: " << result.m_num_elements << std::endl << std::endl;
+}
+
+void runSumTest(PackedMemoryArray& pma) {
+    sumTest(pma, 0, 10); // 55
+    sumTest(pma, 1, 10); // 55
+    sumTest(pma, 2, 10); // 54
+    sumTest(pma, 10, 15); // 75
+    sumTest(pma, 98, 200); // 197
+}
+
 int main() {
     PackedMemoryArray pma(8 /* initial capacity */);
     distInsert(pma);
+    pma.print(pma.segmentSize);
 
-    //    pma.rebalance(0, pma.capacity - 1);
-    //    pma.print(pma.segmentSize);
-    pma.printStats();
-    pma.checkIfSorted();
+    // pma.rebalance(0, pma.capacity - 1);
+    // pma.printStats();
+    // pma.checkIfSorted();
 
     return 0;
 }

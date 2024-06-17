@@ -123,7 +123,7 @@ class PackedMemoryArray {
                 }
             }
 
-            double step = static_cast<double>(segmentSizeToRebalance - 1) / (numElements - 1);
+            double step = static_cast<double>(segmentSizeToRebalance) / numElements;
             DEBUG_PRINT << "Rebalancing Step: " << step << " between " << left << " and " << right << std::endl;
 
             for (uint64_t i = 0; i < numElements; i++) {
@@ -425,11 +425,11 @@ void distInsert(PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 1000);
 
     t.start();
-    for (int count = 0; count < 10000; count++) {
+    for (int count = 0; count < 1000000; count++) {
        int num = distr(eng);
         pma.insertElement(num, count);
         //pma.insertElement(count);
-        pma.print(pma.segmentSize);
+        // pma.print(pma.segmentSize);
         //        pma.print(true, count);
         //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
  //       pma.checkIfSorted();
