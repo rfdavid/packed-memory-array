@@ -2,14 +2,13 @@
 
 namespace pma {
 
-void PackedMemoryArray::checkIfSorted() {
+bool PackedMemoryArray::isSorted() {
     for (uint64_t i = 0; i < capacity - 1; i++) {
         if (data[i] && data[i + 1] && data[i]->first > data[i + 1]->first) {
-            std::cerr << "Array is not sorted" << std::endl;
-            exit(1);
+            return false;
         }
     }
-    std::cout << "Array is sorted" << std::endl;
+    return true;
 }
 
 void PackedMemoryArray::printStats() {

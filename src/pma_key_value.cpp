@@ -16,7 +16,7 @@ namespace pma {
 // this implementation is the closest as possible to rma implementation
 // TODO: create a specific find interval method: first find the first key
 // (start), then do a binary search with left = start and right = capacity
-PackedMemoryArray::SumResult PackedMemoryArray::sum(uint64_t min, uint64_t max) {
+SumResult PackedMemoryArray::sum(uint64_t min, uint64_t max) {
     uint64_t minPos = binarySearchPMA(min);
     uint64_t maxPos = binarySearchPMA(max);
 

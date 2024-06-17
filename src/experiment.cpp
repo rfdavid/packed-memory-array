@@ -1,4 +1,3 @@
-#include <list>
 #include <random>
 
 #include "timer.hpp" // from reddragon
@@ -31,7 +30,7 @@ void distInsert(pma::PackedMemoryArray& pma) {
 }
 
 void sumTest(pma::PackedMemoryArray& pma, int64_t min, int64_t max) {
-    pma::PackedMemoryArray::SumResult result = pma.sum(min, max);
+    pma::SumResult result = pma.sum(min, max);
     std::cout << "First Key: " << result.m_first_key << std::endl;
     std::cout << "Last Key: " << result.m_last_key << std::endl;
     std::cout << "Sum Keys: " << result.m_sum_keys << std::endl;
@@ -45,25 +44,14 @@ void runSumTest(pma::PackedMemoryArray& pma) {
     sumTest(pma, 2, 10); // 54
     sumTest(pma, 10, 15); // 75
     sumTest(pma, 98, 200); // 197
-                           //
     sumTest(pma, 98, 200); // 197
     sumTest(pma, 28, 28); // 28
 }
 
-void manualInsert(pma::PackedMemoryArray& pma) {
-    std::list<int> keys = {5, 10, 6, 17, 1, 21, 9, 12, 8, 16, 20, 13, 7, 3, 15, 19, 14, 11, 22, 18, 4, 2};
-
-    for (auto key : keys) {
-        pma.print(pma.segmentSize);
-        pma.insertElement(key, key*10);
-    }
-}
 
 int main() {
     pma::PackedMemoryArray pma(64 /* initial capacity */);
 //    distInsert(pma);
-
-    manualInsert(pma);
 
 //    uint64_t index = pma.binarySearchPMA(12);
 //    sumTest(pma, 28, 28); // 28
@@ -73,7 +61,7 @@ int main() {
 
     // pma.rebalance(0, pma.capacity - 1);
     pma.printStats();
-    pma.checkIfSorted();
+//    pma.checkIfSorted();
 
     return 0;
 }
