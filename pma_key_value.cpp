@@ -12,6 +12,7 @@
 #include <thread>
 #include <chrono>
 #include <algorithm>
+#include <list>
 #include "timer.hpp" // from reddragon
 
 #ifdef DEBUG
@@ -67,21 +68,16 @@ class PackedMemoryArray {
             std::cout << "Total Elements: " << totalElements << std::endl;
         }
 
-        void print(int segmentSize = 0, bool overwrite = false, int highlightNumber = -1) {
-            if (overwrite) {
-                std::cout << "\033[2J\033[1;1H";
-            }
+        void print(int segmentSize = 0, bool printIndex = false) {
             for (uint64_t i = 0; i < capacity; i++) {
                 if (i > 0 && segmentSize > 0 && i % segmentSize == 0) {
                     std::cout << " | ";
                 }
-
                 if (data[i] != std::nullopt) {
-                    if (data[i]->first == highlightNumber) {
-                        std::cout << "\033[31m" << data[i]->first << "\033[0m ";
-                    } else {
-                        std::cout << data[i]->first << " (" << data[i]->second << ") ";
+                    if (printIndex) {
+                        std::cout << i << ": ";
                     }
+                    std::cout << data[i]->first << " (" << data[i]->second << ") ";
                 } else {
                     std::cout << "_ ";
                 }
@@ -544,17 +540,18 @@ class PackedMemoryArray {
                 DEBUG_PRINT << "Shifting right" << std::endl;
 
                 // bring the gap to the desired position
-                if (value > data[mid]->first) {
+                if (key > data[mid]->first) {
                     mid++;
                 }
 
+                // bring the gap to the left 
                 for (uint64_t i = nearestGap; i > mid; i--) {
                     data[i] = data[i - 1];
                 }
             } else {
                 DEBUG_PRINT << "Shifting left" << std::endl;
 
-                if (value < data[mid]->first) {
+                if (key < data[mid]->first) {
                     mid--;
                 }
                 for (uint64_t i = nearestGap; i < mid; i++) {
@@ -580,9 +577,9 @@ void distInsert(PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 100000000);
 
     t.start();
-    for (int count = 10; count < 100; count++) {
+    for (int count = 1; count <= 30; count++) {
         //       int num = distr(eng);
-        pma.insertElement(count, count);
+        pma.insertElement(count, count*10);
         //pma.print(pma.segmentSize);
         //pma.insertElement(count);
         //        pma.print(true, count);
@@ -609,16 +606,35 @@ void runSumTest(PackedMemoryArray& pma) {
     sumTest(pma, 2, 10); // 54
     sumTest(pma, 10, 15); // 75
     sumTest(pma, 98, 200); // 197
+                           //
+    sumTest(pma, 98, 200); // 197
+    sumTest(pma, 28, 28); // 28
+}
+
+void manualInsert(PackedMemoryArray& pma) {
+    std::list<int> keys = {5, 10, 6, 17, 1, 21, 9, 12, 8, 16, 20, 13, 7, 3, 15, 19, 14, 11, 22, 18, 4, 2};
+
+    for (auto key : keys) {
+        pma.print(pma.segmentSize);
+        pma.insertElement(key, key*10);
+    }
 }
 
 int main() {
-    PackedMemoryArray pma(8 /* initial capacity */);
-    distInsert(pma);
-    pma.print(pma.segmentSize);
+    PackedMemoryArray pma(64 /* initial capacity */);
+//    distInsert(pma);
+
+    manualInsert(pma);
+
+//    uint64_t index = pma.binarySearchPMA(12);
+//    sumTest(pma, 28, 28); // 28
+//
+//    std::cout << "Index: " << index << std::endl;
+
 
     // pma.rebalance(0, pma.capacity - 1);
-    // pma.printStats();
-    // pma.checkIfSorted();
+    pma.printStats();
+    pma.checkIfSorted();
 
     return 0;
 }
