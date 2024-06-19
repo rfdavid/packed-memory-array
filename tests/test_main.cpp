@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "pma_key_value.hpp"
 #include <list>
+#include <random>
 
 TEST_CASE("Insert sequential elements", "[pma]") {
     pma::PackedMemoryArray pma(8);
@@ -35,6 +36,25 @@ TEST_CASE("Insert 10k elements", "[pma]") {
     REQUIRE(pma.noOfSegments() == 1024);
     REQUIRE(pma.getTreeHeight() == 11);
     REQUIRE(pma.totalElements == 10000);
+}
+
+TEST_CASE("Insert 100k random big numbers", "[pma]") {
+    pma::PackedMemoryArray pma(8);
+    std::random_device rd;
+    std::mt19937 eng(rd());
+    std::uniform_int_distribution<> distr(1, 100000);
+
+    for (int i = 0; i < 100000; i++) {
+        pma.insertElement(distr(eng), i*1000000);
+    }
+
+    REQUIRE(pma.isSorted() == true);
+    REQUIRE(pma.size() == 131072);
+    REQUIRE(pma.segmentSize == 32);
+    REQUIRE(pma.noOfSegments() == 4096);
+    REQUIRE(pma.getTreeHeight() == 13);
+    // elements are random and not unique
+    REQUIRE(pma.totalElements > 63000);
 }
 
 

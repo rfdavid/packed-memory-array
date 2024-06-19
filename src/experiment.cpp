@@ -15,7 +15,7 @@ void distInsert(pma::PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 100000000);
 
     t.start();
-    for (int count = 0; count < 10000; count++) {
+    for (int count = 0; count < 100000; count++) {
         //       int num = distr(eng);
         pma.insertElement(count, count*10);
 
