@@ -60,13 +60,13 @@ public:
     uint64_t segmentSize;
     uint64_t capacity;
     uint64_t totalElements = 0;
+    bool binarySearchPMA(uint64_t key, uint64_t *index);
 
 private:
     double upperThresholdAtLevel(int level);
     double lowerThresholdAtLevel(int level);
     void rebalance(uint64_t left, uint64_t right);
     void insertElement(int key, int value, uint64_t index);
-    uint64_t binarySearchPMA(uint64_t key);
     void getSegmentOffset(int level, int index, uint64_t *start, uint64_t *end);
     double getDensity(uint64_t left, uint64_t right);
     void doubleCapacity();

@@ -17,8 +17,10 @@ namespace pma {
 // TODO: create a specific find interval method: first find the first key
 // (start), then do a binary search with left = start and right = capacity
 SumResult PackedMemoryArray::sum(uint64_t min, uint64_t max) {
-    uint64_t minPos = binarySearchPMA(min);
-    uint64_t maxPos = binarySearchPMA(max);
+    uint64_t minPos = 0; 
+    binarySearchPMA(min, &minPos);
+    uint64_t maxPos = 0; 
+    binarySearchPMA(max, &maxPos);
 
     // find the first non-null element 
     // this element will be the first key in the interval
@@ -80,95 +82,19 @@ double PackedMemoryArray::lowerThresholdAtLevel(int level) {
     return ph - 0.25 * diff;
 }
 
-//	void rebalance(uint64_t from, uint64_t to) {
-//		uint64_t capacity = to - from;
-//		uint64_t n = 0;
-//		for (uint64_t i = from; i < to; ++i) {
-//			if (data[i] != std::nullopt) n++;
-//		}
-//
-//		uint64_t frequency = (capacity << 8) / n;
-//
-//		uint64_t read_index = from + n - 1;
-//		uint64_t write_index = (to << 8) - frequency;
-//
-//		while ((write_index >> 8) > read_index) {
-//			data[write_index >> 8] = data[read_index];
-//			data[read_index] = std::nullopt;
-//			read_index--;
-//			write_index -= frequency;
-//		}
-//	}
 
-//        void halveCapacity() {
-//            std::vector<std::pair<int, int>> segmentElements;
-//            capacity /= 2;
-//            data.resize(capacity, std::nullopt);
-//            segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
+// new version 
+// return true if the key already exists, false otherwise
+// return the predecessor element
+// return the last gap found, if there is any
 //
-//            for (const auto& element : data) {
-//                if (element) {
-//                    segmentElements.push_back(element);
-//                }
-//            }
-//            for (uint64_t i = left; i < right; i++) {
-//                if (data[i]) {
-//                    segmentElements.push_back(data[i].value());
-//                    numElements++;
-//                    // clear the segment after copying
-//                    data[i] = std::nullopt;
-//                }
-//            }
-//        }
+// 1 2 4 6 8 _ 12
+// 0 1 2 3 4 5  6
 //
-// adapted binary search to handle gaps
-// int binarySearchPMA2(int key) {
-//     uint64_t left = 0;
-//     uint64_t right = capacity - 1;
-//     uint64_t mid = 0;
-// 
-//     // binary search the key
-//     while (left <= right) {
-//         mid = left + (right - left) / 2;
-// 
-//         // mid is a gap
-//         if (data[mid] == std::nullopt) {
-//             uint64_t nearestLeft = mid,  nearestRight = mid;
-// 
-//             // search nearest non-nullopt keys
-//             while (nearestLeft > left && !data[nearestLeft]) nearestLeft--;
-//             while (nearestRight < right && !data[nearestRight]) nearestRight++;
-// 
-//             if (nearestLeft >= left && data[nearestLeft] && data[nearestLeft]->first >= key) {
-//                 right = nearestLeft;
-//             } else if (nearestRight <= right && data[nearestRight] && data[nearestRight]->first <= key) {
-//                 left = nearestRight;
-//             } else {
-//                 // no valid entries around, or only gaps between left and right
-//                 break;
-//             }
-//             continue;
-//         }
-// 
-//         // key already exists
-//         if (data[mid]->first == key) {
-//             DEBUG_PRINT << "key already exists" << std::endl;
-//             break;
-//         }
-// 
-//         if (data[mid]->first < key) {
-//             left = mid + 1;
-//         } else if (data[mid]->first > key) {
-//             // prevents underflow here
-//             if (mid == 0) break;
-//             right = mid - 1;
-//         }
-//     }
-//     return mid;
-// }
-
-// Adapted Binary Search to handle gaps
-uint64_t PackedMemoryArray::binarySearchPMA(uint64_t key) {
+// Find (3) : 2
+// Find (5) : 4
+// Find (11) : 7
+bool PackedMemoryArray::binarySearchPMA(uint64_t key, uint64_t *index) {
     uint64_t left = 0;
     uint64_t right = capacity - 1;
     uint64_t mid = 0;
@@ -177,45 +103,48 @@ uint64_t PackedMemoryArray::binarySearchPMA(uint64_t key) {
     while (left <= right) {
         mid = left + (right - left) / 2;
 
-        // key already exists, do nothing
-        if (data[mid] && data[mid]->first == key) {
-            DEBUG_PRINT << "key already exists" << std::endl;
-            break;
+        // mid is a gap
+        if (data[mid] == std::nullopt) {
+            uint64_t nearestElement = mid;
+            // search for the first valid element at the left
+            while (nearestElement > left && !data[nearestElement]) nearestElement--;
+
+            // found a valid element, adjust mid
+            if (data[nearestElement]) {
+                mid = nearestElement;
+            } else {
+                // no? search at the right
+                nearestElement = mid;
+                while (nearestElement < right && !data[nearestElement]) nearestElement++;
+                mid = nearestElement;
+
+                // is it still a gap? break
+                if (!data[mid]) break;
+            }
         }
 
-        if (data[mid] && data[mid]->first < key) {
+        uint64_t currentKey = data[mid]->first;
+
+        // key already exists
+        if (currentKey == key) {
+            DEBUG_PRINT << "key already exists" << std::endl;
+            *index = mid;
+            return true;
+        }
+
+        // otherwise, adjust left and right
+        if (currentKey < key) {
             left = mid + 1;
-        } else if (data[mid] && data[mid]->first > key) {
+        } else if (currentKey > key) {
             // prevents underflow here
-            if (mid == 0) {
-                break;
-            }
+            if (mid == 0) break;
             right = mid - 1;
-        } else {
-            // data[mid] is a gap (std::nullopt), search nearest non-nullopt keys
-            uint64_t nearestLeft = mid,  nearestRight = mid;
-
-            while (nearestLeft > left && !data[nearestLeft]) nearestLeft--;
-            while (nearestRight < right && !data[nearestRight]) nearestRight++;
-
-            // no data between left and right
-            if (!data[nearestLeft] && !data[nearestRight]) {
-                break;
-            }
-
-            if (nearestLeft >= left && data[nearestLeft] && data[nearestLeft]->first >= key) {
-                right = nearestLeft;
-            } else if (nearestRight <= right && data[nearestRight] && data[nearestRight]->first <= key) {
-                left = nearestRight;
-            } else {
-                // no valid entries around, or only gaps between left and right
-                break;
-            }
         }
     }
-    return mid;
-}
 
+    *index = mid;
+    return false;
+}
 void PackedMemoryArray::rebalance(uint64_t left, uint64_t right) {
     // calculate gaps and elements for that segment
     // temporarily store the elements in a vector
@@ -377,96 +306,250 @@ void PackedMemoryArray::checkForRebalancing(int index) {
     }
 }
 
-// found position will indicate if the gap was found to the left or right
-// -1 for left, 1 for right
-uint64_t PackedMemoryArray::findFirstGapFrom(uint64_t startingIndex) {
-    uint64_t leftCursor = startingIndex;
-    uint64_t rightCursor = startingIndex;
-    uint64_t gapIndex = UINT64_MAX;
-
-    while (leftCursor >= 0 || rightCursor < capacity) {
-        if (rightCursor < capacity) {
-            if (data[rightCursor] == std::nullopt) {
-                gapIndex = rightCursor;
-                break;
-            }
-            rightCursor++;
-        }
-        if (leftCursor >= 0) {
-            if (data[leftCursor] == std::nullopt) {
-                gapIndex = leftCursor;
-                break;
-            }
-            if (leftCursor == 0) continue;
-            leftCursor--;
-        }
-    }
-    return gapIndex;
-}
-
 void PackedMemoryArray::deleteElement(int key) {
-    uint64_t mid = binarySearchPMA(key);
-    if (data[mid] && data[mid]->first == key) {
+    uint64_t mid = 0;
+    if (binarySearchPMA(key, &mid)) {
         data[mid] = std::nullopt;
         totalElements--;
         checkForRebalancing(mid);
     }
 }
 
+// found position will indicate if the gap was found to the left or right
+uint64_t PackedMemoryArray::findFirstGapFrom(uint64_t startingIndex) {
+    int64_t leftCursor = static_cast<int64_t>(startingIndex);
+    uint64_t rightCursor = startingIndex;
+    while (leftCursor >= 0 || rightCursor < capacity) {
+        // check right side
+        if (rightCursor < capacity) {
+            if (data[rightCursor] == std::nullopt) {
+                return rightCursor;
+            }
+            rightCursor++;
+        }
+        // check left side
+        if (leftCursor >= 0) {
+            if (data[leftCursor] == std::nullopt) {
+                return leftCursor;
+            }
+            leftCursor--;
+        }
+    }
+    return UINT64_MAX;
+}
+
+
 void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
     assert(capacity > 0);
+    uint64_t position = 0; 
 
-    uint64_t mid = binarySearchPMA(key);
-    DEBUG_PRINT << "Key, Value to insert: " << key << "," << value << " | desired position: " << mid << std::endl;
+    // element found
+    if (binarySearchPMA(key, &position)) return;
 
-    // key already exists
-    if (data[mid] && key == data[mid]->first) return;
+    DEBUG_PRINT << "Key, Value to insert: " << key << "," << value << " | desired position: " << position << std::endl;
 
-    // at this point, 'mid' is the most important value here
-    // meaning where we want to insert the value
     // if there is a gap, insert the value and that's it 
-    if (data[mid] == std::nullopt) {
-        DEBUG_PRINT << "Inserting value: " << value << " at index: " << mid << std::endl;
-        insertElement(key, value, mid);
-        checkForRebalancing(mid);
+    if (data[position] == std::nullopt) {
+        DEBUG_PRINT << "Inserting value: " << value << " at index: " << position << std::endl;
+        insertElement(key, value, position);
+        checkForRebalancing(position);
         return;
     } 
 
-    DEBUG_PRINT << "Searching for nearest gap" << std::endl;
-    uint64_t nearestGap = findFirstGapFrom(mid);
-
+    // find the closest gap from either left or right
+    uint64_t nearestGap = findFirstGapFrom(position);
     DEBUG_PRINT << "Neareast gap found at: " << nearestGap << ", position: " << std::endl;
 
-    // 'mid' is where we want the element to be placed
-    // if nearestGap is greater than mid, shift right
-    // if nearestGap is less than mid, shift left
-    if (nearestGap > mid) {
+    // 'position' is where we want the element to be placed
+    if (nearestGap > position) {
         // gap found at the right
+        // 2 4 6 8 _ 12
+        //     p   ng
         DEBUG_PRINT << "Shifting right" << std::endl;
 
         // bring the gap to the desired position
-        if (key > data[mid]->first) {
-            mid++;
-        }
+        if (key > data[position]->first) position++;
 
         // bring the gap to the left 
-        for (uint64_t i = nearestGap; i > mid; i--) {
+        for (auto i = nearestGap; i > position; i--) {
             data[i] = data[i - 1];
         }
     } else {
         DEBUG_PRINT << "Shifting left" << std::endl;
 
-        if (key < data[mid]->first) {
-            mid--;
-        }
-        for (uint64_t i = nearestGap; i < mid; i++) {
+        if (key < data[position]->first) position--;
+        for (auto i = nearestGap; i < position; i++) {
             data[i] = data[i + 1];
         }
     }
 
-    // insert the value into mid position
-    insertElement(key, value, mid);
-    checkForRebalancing(mid);
+    // insert the value into the desired position
+    insertElement(key, value, position);
+    checkForRebalancing(position);
 }
 
 } // namespace pma
+
+// 
+// 
+// Adapted Binary Search to handle gaps
+//uint64_t PackedMemoryArray::binarySearchPMA(uint64_t key) {
+//     uint64_t left = 0;
+//     uint64_t right = capacity - 1;
+//     uint64_t mid = 0;
+// 
+//     // binary search the key
+//     while (left <= right) {
+//         mid = left + (right - left) / 2;
+// 
+//         // key already exists, do nothing
+//         if (data[mid] && data[mid]->first == key) {
+//             DEBUG_PRINT << "key already exists" << std::endl;
+//             break;
+//         }
+// 
+//         if (data[mid] && data[mid]->first < key) {
+//             left = mid + 1;
+//         } else if (data[mid] && data[mid]->first > key) {
+//             // prevents underflow here
+//             if (mid == 0) {
+//                 break;
+//             }
+//             right = mid - 1;
+//         } else {
+//             // data[mid] is a gap (std::nullopt), search nearest non-nullopt keys
+//             uint64_t nearestLeft = mid,  nearestRight = mid;
+// 
+//             while (nearestLeft > left && !data[nearestLeft]) nearestLeft--;
+//             while (nearestRight < right && !data[nearestRight]) nearestRight++;
+// 
+//             // no data between left and right
+//             if (!data[nearestLeft] && !data[nearestRight]) {
+//                 break;
+//             }
+// 
+//             if (nearestLeft >= left && data[nearestLeft] && data[nearestLeft]->first >= key) {
+//                 right = nearestLeft;
+//             } else if (nearestRight <= right && data[nearestRight] && data[nearestRight]->first <= key) {
+//                 left = nearestRight;
+//             } else {
+//                 // no valid entries around, or only gaps between left and right
+//                 break;
+//             }
+//         }
+//     }
+//     return mid;
+// }
+ 
+
+//	void rebalance(uint64_t from, uint64_t to) {
+//		uint64_t capacity = to - from;
+//		uint64_t n = 0;
+//		for (uint64_t i = from; i < to; ++i) {
+//			if (data[i] != std::nullopt) n++;
+//		}
+//
+//		uint64_t frequency = (capacity << 8) / n;
+//
+//		uint64_t read_index = from + n - 1;
+//		uint64_t write_index = (to << 8) - frequency;
+//
+//		while ((write_index >> 8) > read_index) {
+//			data[write_index >> 8] = data[read_index];
+//			data[read_index] = std::nullopt;
+//			read_index--;
+//			write_index -= frequency;
+//		}
+//	}
+
+//        void halveCapacity() {
+//            std::vector<std::pair<int, int>> segmentElements;
+//            capacity /= 2;
+//            data.resize(capacity, std::nullopt);
+//            segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
+//
+//            for (const auto& element : data) {
+//                if (element) {
+//                    segmentElements.push_back(element);
+//                }
+//            }
+//            for (uint64_t i = left; i < right; i++) {
+//                if (data[i]) {
+//                    segmentElements.push_back(data[i].value());
+//                    numElements++;
+//                    // clear the segment after copying
+//                    data[i] = std::nullopt;
+//                }
+//            }
+//        }
+//
+// adapted binary search to handle gaps
+// int binarySearchPMA2(int key) {
+//     uint64_t left = 0;
+//     uint64_t right = capacity - 1;
+//     uint64_t mid = 0;
+// 
+//     // binary search the key
+//     while (left <= right) {
+//         mid = left + (right - left) / 2;
+// 
+//         // mid is a gap
+//         if (data[mid] == std::nullopt) {
+//             uint64_t nearestLeft = mid,  nearestRight = mid;
+// 
+//             // search nearest non-nullopt keys
+//             while (nearestLeft > left && !data[nearestLeft]) nearestLeft--;
+//             while (nearestRight < right && !data[nearestRight]) nearestRight++;
+// 
+//             if (nearestLeft >= left && data[nearestLeft] && data[nearestLeft]->first >= key) {
+//                 right = nearestLeft;
+//             } else if (nearestRight <= right && data[nearestRight] && data[nearestRight]->first <= key) {
+//                 left = nearestRight;
+//             } else {
+//                 // no valid entries around, or only gaps between left and right
+//                 break;
+//             }
+//             continue;
+//         }
+// 
+//         // key already exists
+//         if (data[mid]->first == key) {
+//             DEBUG_PRINT << "key already exists" << std::endl;
+//             break;
+//         }
+// 
+//         if (data[mid]->first < key) {
+//             left = mid + 1;
+//         } else if (data[mid]->first > key) {
+//             // prevents underflow here
+//             if (mid == 0) break;
+//             right = mid - 1;
+//         }
+//     }
+//     return mid;
+// }
+//
+// uint64_t PackedMemoryArray::findFirstGapFrom(uint64_t startingIndex) {
+//     uint64_t leftCursor = startingIndex;
+//     uint64_t rightCursor = startingIndex;
+//     uint64_t gapIndex = UINT64_MAX;
+// 
+//     while (leftCursor >= 0 || rightCursor < capacity) {
+//         if (rightCursor < capacity) {
+//             if (data[rightCursor] == std::nullopt) {
+//                 gapIndex = rightCursor;
+//                 break;
+//             }
+//             rightCursor++;
+//         }
+//         if (leftCursor >= 0) {
+//             if (data[leftCursor] == std::nullopt) {
+//                 gapIndex = leftCursor;
+//                 break;
+//             }
+//             if (leftCursor == 0) continue;
+//             leftCursor--;
+//         }
+//     }
+//     return gapIndex;
+// }

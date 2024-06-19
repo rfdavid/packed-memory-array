@@ -15,15 +15,11 @@ void distInsert(pma::PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 100000000);
 
     t.start();
-    for (int count = 0; count < 100000; count++) {
+    for (int count = 0; count < 1000; count++) {
         //       int num = distr(eng);
         pma.insertElement(count, count*10);
 
-        if (count % 10000 == 0) {
-            std::cout << ".";
-        }
-
-        //pma.print(pma.segmentSize);
+        pma.print(pma.segmentSize);
         //pma.insertElement(count);
         //        pma.print(true, count);
         //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -55,8 +51,26 @@ void runSumTest(pma::PackedMemoryArray& pma) {
 
 
 int main() {
+    uint64_t mid = 0;
     pma::PackedMemoryArray pma(8 /* initial capacity */);
-    distInsert(pma);
+
+    pma.insertElement(0,0);
+    pma.insertElement(2,1);
+    pma.print(pma.segmentSize);
+    pma.insertElement(4,2);
+    pma.print(pma.segmentSize);
+//    pma.insertElement(6,3);
+//    pma.insertElement(8,4);
+//    pma.insertElement(12,6);
+//
+    pma.binarySearchPMA(3, &mid);
+    std::cout << "Find (3) : " << mid << std::endl;
+    pma.binarySearchPMA(5, &mid);
+    std::cout << "Find (5) : " << mid << std::endl;
+    pma.binarySearchPMA(11, &mid);
+    std::cout << "Find (11) : " << mid << std::endl;
+
+//    distInsert(pma);
 //    pma.print(pma.segmentSize);
 
 //    uint64_t index = pma.binarySearchPMA(12);
@@ -66,7 +80,7 @@ int main() {
 
 
     // pma.rebalance(0, pma.capacity - 1);
-    pma.printStats();
+//    pma.printStats();
 //    pma.checkIfSorted();
 
     return 0;
