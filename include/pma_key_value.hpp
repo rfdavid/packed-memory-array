@@ -7,8 +7,12 @@
 
 #ifdef DEBUG
 #define DEBUG_PRINT std::cout
+#define HIGHLIGHT_START std::cout << "\033[1;31m"
+#define HIGHLIGHT_END std::cout << "\033[0m"
 #else
 #define DEBUG_PRINT if (false) std::cout
+#define HIGHLIGHT_START if (false) std::cout
+#define HIGHLIGHT_END if (false) std::cout
 #endif
 
 namespace pma {
@@ -25,13 +29,13 @@ namespace pma {
 class PackedMemoryArray {
 public:
     PackedMemoryArray(uint64_t capacity) : capacity(capacity) {
+        data = std::vector<std::optional<std::pair<int64_t, int64_t>>>(capacity, std::nullopt);
         // from rma, 2^ceil(log2(log2(n)))
         // 2^ ceil(log2(log2(64))) = 2^ceil(log2(6)) = 2^ceil(3) = 8
-        segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
-        data = std::vector<std::optional<std::pair<int, int>>>(capacity, std::nullopt);
+        segmentSize = capacity;
     }
 
-    void insertElement(int key, int value);
+    void insertElement(int64_t key, int64_t value);
     // sum elements from a specific range
     SumResult sum(uint64_t min, uint64_t max);
     void print(int segmentSize = 0, bool printIndex = false);
@@ -47,9 +51,15 @@ public:
     uint64_t size() const {
         return capacity;
     }
+    uint64_t noOfSegments() const {
+        return capacity / segmentSize;
+    }
+    int getTreeHeight();
 
 public:
     uint64_t segmentSize;
+    uint64_t capacity;
+    uint64_t totalElements = 0;
 
 private:
     double upperThresholdAtLevel(int level);
@@ -57,7 +67,6 @@ private:
     void rebalance(uint64_t left, uint64_t right);
     void insertElement(int key, int value, uint64_t index);
     uint64_t binarySearchPMA(uint64_t key);
-    int getTreeHeight();
     void getSegmentOffset(int level, int index, uint64_t *start, uint64_t *end);
     double getDensity(uint64_t left, uint64_t right);
     void doubleCapacity();
@@ -67,9 +76,7 @@ private:
     void deleteElement(int key);
 
 private:
-    std::vector<std::optional<std::pair<int, int>>> data;
-    uint64_t capacity;
-    uint64_t totalElements = 0;
+    std::vector<std::optional<std::pair<int64_t, int64_t>>> data;
 
     // lower threshold at level 1
     static constexpr double p1 = 0.1;

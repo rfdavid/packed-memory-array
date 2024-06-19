@@ -322,6 +322,8 @@ public:
 
     // Dump the content of the data structure to stdout (for debugging purposes)
     virtual void dump() const override;
+
+    void dump_info() const;
 };
 
 } // namespace pma

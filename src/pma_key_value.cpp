@@ -67,7 +67,11 @@ double PackedMemoryArray::upperThresholdAtLevel(int level) {
     // if (level == height) return th;
     // from rma implementation
     double diff = (((double) height) - level) / height;
-    return ph + 0.25 * diff;
+    double threshold = th + 0.25 * diff;
+    HIGHLIGHT_START;
+    DEBUG_PRINT << "Height: " << height << ", Level: " << level << ", Diff: " << diff << ", Threshold: " << threshold << std::endl;
+    HIGHLIGHT_END;
+    return threshold;
 }
 
 double PackedMemoryArray::lowerThresholdAtLevel(int level) {
@@ -255,7 +259,7 @@ int PackedMemoryArray::getTreeHeight() {
     int noOfSegments = capacity / segmentSize;
     if (noOfSegments == 1) return 1;
     int height = log2(noOfSegments) + 1;
-    DEBUG_PRINT << "Capacity: " << capacity << ", No of Segments: " << noOfSegments << ", Height: " << height << std::endl;
+    DEBUG_PRINT << "Capacity: " << capacity << ", No of Segments: " << noOfSegments << ", Height: " << height << ", Segment Size: " << segmentSize << std::endl;
     return height;
 }
 
@@ -409,7 +413,7 @@ void PackedMemoryArray::deleteElement(int key) {
     }
 }
 
-void PackedMemoryArray::insertElement(int key, int value) {
+void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
     assert(capacity > 0);
 
     uint64_t mid = binarySearchPMA(key);

@@ -15,9 +15,14 @@ void distInsert(pma::PackedMemoryArray& pma) {
     std::uniform_int_distribution<> distr(0, 100000000);
 
     t.start();
-    for (int count = 1; count <= 30; count++) {
+    for (int count = 0; count < 10000; count++) {
         //       int num = distr(eng);
         pma.insertElement(count, count*10);
+
+        if (count % 10000 == 0) {
+            std::cout << ".";
+        }
+
         //pma.print(pma.segmentSize);
         //pma.insertElement(count);
         //        pma.print(true, count);
@@ -50,8 +55,9 @@ void runSumTest(pma::PackedMemoryArray& pma) {
 
 
 int main() {
-    pma::PackedMemoryArray pma(64 /* initial capacity */);
-//    distInsert(pma);
+    pma::PackedMemoryArray pma(8 /* initial capacity */);
+    distInsert(pma);
+//    pma.print(pma.segmentSize);
 
 //    uint64_t index = pma.binarySearchPMA(12);
 //    sumTest(pma, 28, 28); // 28

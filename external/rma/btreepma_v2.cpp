@@ -915,6 +915,26 @@ void BTreePMA_v2::dump() const {
     dump(std::cout);
 }
 
+void BTreePMA_v2::dump_info() const {
+    std::cout << "[Index] intnode_a: " << index.intnode_a << ", intnode_b: " << index.intnode_b <<
+            ", leaf_a: " << index.leaf_a << ", leaf_b: " << index.leaf_b <<
+            ", storage_a: " << index.storage_a << ", storage_b: " << index.storage_b << "\n";
+
+    bool integrity_check = true;
+//    dump_node(out, index.root, 0, &integrity_check);
+
+    std::cout << "\n";
+    std::cout << "[Storage] PMA total capacity: " << storage.m_capacity << ", segment capacity: " << storage.m_segment_capacity <<
+            ", number of segments: " << storage_get_num_segments() <<
+            ", height: " << storage.m_height << ", cardinality: " << storage.m_cardinality << "\n";
+
+//    dump_storage(out);
+
+    std::cout << std::endl;
+
+    assert(integrity_check && "Integrity check failed!");
+}
+
 void BTreePMA_v2::dump(std::ostream& out) const {
     out << "[Index] intnode_a: " << index.intnode_a << ", intnode_b: " << index.intnode_b <<
             ", leaf_a: " << index.leaf_a << ", leaf_b: " << index.leaf_b <<

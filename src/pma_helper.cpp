@@ -12,9 +12,10 @@ bool PackedMemoryArray::isSorted() {
 }
 
 void PackedMemoryArray::printStats() {
-    std::cout << "Capacity: " << capacity << std::endl;
-    std::cout << "Segment Size: " << segmentSize << std::endl;
-    std::cout << "Total Elements: " << totalElements << std::endl;
+    std::cout << "[Storage] PMA total capacity: " << capacity 
+        << ", segment capacity: " << segmentSize
+        << ", number of segments: " << capacity / segmentSize
+        << ", height: " << getTreeHeight() << ", cardinality: " << totalElements << std::endl;
 }
 
 void PackedMemoryArray::print(int segmentSize, bool printIndex) {

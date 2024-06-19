@@ -10,7 +10,7 @@ TEST_CASE("Insert sequential elements", "[pma]") {
     }
 
     REQUIRE(pma.isSorted() == true);
-    REQUIRE(pma.size() == 128);
+    REQUIRE(pma.size() == 64);
 }
 
 TEST_CASE("Inverse insertion", "[pma]") {
@@ -20,15 +20,29 @@ TEST_CASE("Inverse insertion", "[pma]") {
     }
 
     REQUIRE(pma.isSorted() == true);
-    REQUIRE(pma.size() == 512);
+    REQUIRE(pma.size() == 256);
 }
+
+TEST_CASE("Insert 10k elements", "[pma]") {
+    pma::PackedMemoryArray pma(64);
+    for (int i = 10000; i > 0; i--) {
+        pma.insertElement(i, i*10000);
+    }
+
+    REQUIRE(pma.isSorted() == true);
+    REQUIRE(pma.size() == 16384);
+    REQUIRE(pma.segmentSize == 16);
+    REQUIRE(pma.noOfSegments() == 1024);
+    REQUIRE(pma.getTreeHeight() == 11);
+    REQUIRE(pma.totalElements == 10000);
+}
+
 
 TEST_CASE("Random insert", "[pma]") {
     pma::PackedMemoryArray pma(8);
     std::list<int> keys = {5, 10, 6, 17, 1, 21, 9, 12, 8, 16, 20, 13, 7, 3, 15, 19, 14, 11, 22, 18, 4, 2};
 
     for (auto key : keys) {
-        pma.print(pma.segmentSize);
         pma.insertElement(key, key*10);
     }
 
