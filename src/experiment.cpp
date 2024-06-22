@@ -1,7 +1,7 @@
 #include <random>
 
 #include "timer.hpp" // from reddragon
-#include "pma_key_value.hpp"
+#include "pma_index.hpp"
 
 void distInsert(pma::PackedMemoryArray& pma, int total) {
     Timer t;
@@ -18,7 +18,6 @@ void distInsert(pma::PackedMemoryArray& pma, int total) {
     for (int count = total; count > 0; count--) {
 //        int num = distr(eng);
         pma.insertElement(count, count*10);
-        std::cout << "Inserting: " << count << std::endl;
 
         if (!pma.isSorted()) {
             std::cout << "Not Sorted" << std::endl;
@@ -30,7 +29,7 @@ void distInsert(pma::PackedMemoryArray& pma, int total) {
         }
     }
     double time_taken = t.stop();
-    std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
+//    std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
 }
 
 void sumTest(pma::PackedMemoryArray& pma, int64_t min, int64_t max) {
@@ -57,9 +56,11 @@ int main() {
     uint64_t mid = 0;
     pma::PackedMemoryArray pma(4 /* initial capacity */);
 
-//    pma.insertElement(6,60);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
+   distInsert(pma, 20);
+
+   pma.insertElement(6,60);
+   pma.insertElement(4,40);
+
 //
 //    pma.insertElement(2,20);
 //    pma.print(pma.segmentSize);
@@ -93,7 +94,6 @@ int main() {
 //    pma.print(pma.segmentSize);
 //    pma.printIndices();
 
-   distInsert(pma, 100);
 //   pma.print(pma.segmentSize);
 
 

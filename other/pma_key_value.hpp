@@ -5,10 +5,6 @@
 #include <optional>
 #include <cassert>
 
-#include <map>
-
-//#include "btree.h"
-
 #ifdef DEBUG
 #define DEBUG_PRINT std::cout
 #define HIGHLIGHT_START std::cout << "\033[1;31m"
@@ -44,7 +40,6 @@ public:
     SumResult sum(uint64_t min, uint64_t max);
     void print(int segmentSize = 0, bool printIndex = false);
     void printStats();
-    void printIndices();
     bool isSorted();
 
     bool elemExistsAt(int index) const {
@@ -66,10 +61,6 @@ public:
     uint64_t capacity;
     uint64_t totalElements = 0;
     bool binarySearchPMA(uint64_t key, uint64_t *index);
-//    phmap::btree_set<std::tuple<uint64_t, uint64_t>> index;
-
-    std::multimap<int64_t, int64_t> index;
-    std::unordered_map<int64_t, int64_t> indexMap;
 
 private:
     double upperThresholdAtLevel(int level);
@@ -82,16 +73,10 @@ private:
     bool checkIfFullAndRebalance();
     void checkForRebalancing(int index);
     uint64_t findFirstGapFrom(uint64_t startingIndex);
-    uint64_t findGapWithinSegment(uint64_t pos);
     void deleteElement(int key);
-
-    void updateIndex(int64_t start, int64_t end);
-    void updateIndex(std::multimap<int64_t, int64_t>::iterator& lowerBoundElement);
 
 private:
     std::vector<std::optional<std::pair<int64_t, int64_t>>> data;
-
-    std::vector<std::pair<int64_t, int64_t>> elementsToResize;
 
     // lower threshold at level 1
     static constexpr double p1 = 0.1;

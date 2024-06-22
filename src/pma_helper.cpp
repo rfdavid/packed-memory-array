@@ -1,4 +1,4 @@
-#include "pma_key_value.hpp"
+#include "pma_index.hpp"
 
 namespace pma {
 
@@ -25,14 +25,11 @@ void PackedMemoryArray::printStats() {
 }
 
 void PackedMemoryArray::printIndices() {
-    std::cout << "Index: " << std::endl;
-    for (const auto& [k, v] : index) {
-        DEBUG_PRINT << k << " (" << v << ") " << std::endl;
+    std::cout << "Index keys: ";
+    for (uint64_t i = 0; i <= indexKeys.size(); i++) {
+        std::cout << indexKeys[i] << " => " << indexValues[i] << "   ";
     }
-
-//    for (const auto& [k, v] : indexMap) {
-//        DEBUG_PRINT << k << " (" << v << ") " << std::endl;
-//    }
+    std::cout << std::endl;
 }
 
 
@@ -50,7 +47,7 @@ void PackedMemoryArray::print(int segmentSize, bool printIndex) {
             std::cout << "_ ";
         }
     }
-    std::cout << std::endl << std::endl;
+    std::cout << std::endl;
 }
 
 } // namespace pma
