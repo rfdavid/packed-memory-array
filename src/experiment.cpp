@@ -3,7 +3,7 @@
 #include "timer.hpp" // from reddragon
 #include "pma_key_value.hpp"
 
-void distInsert(pma::PackedMemoryArray& pma) {
+void distInsert(pma::PackedMemoryArray& pma, int total) {
     Timer t;
 
     std::random_device rd;
@@ -12,19 +12,22 @@ void distInsert(pma::PackedMemoryArray& pma) {
 
     DEBUG_PRINT << "Seed: " << seed << std::endl;
     //std::mt19937 eng(seed);
-    std::uniform_int_distribution<> distr(0, 100000000);
+    std::uniform_int_distribution<> distr(0, 100000);
 
     t.start();
-    for (int count = 0; count < 1000; count++) {
-        //       int num = distr(eng);
+    for (int count = total; count > 0; count--) {
+//        int num = distr(eng);
         pma.insertElement(count, count*10);
+        std::cout << "Inserting: " << count << std::endl;
 
-        pma.print(pma.segmentSize);
-        //pma.insertElement(count);
-        //        pma.print(true, count);
-        //        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-        //        pma.checkIfSorted();
-
+        if (!pma.isSorted()) {
+            std::cout << "Not Sorted" << std::endl;
+            std::cout << "Index: " << count << std::endl;
+//            std::cout << "Element: " << num << std::endl;
+//            pma.print(pma.segmentSize, true);
+ //           pma.printIndices();
+            break;
+        }
     }
     double time_taken = t.stop();
     std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
@@ -52,24 +55,59 @@ void runSumTest(pma::PackedMemoryArray& pma) {
 
 int main() {
     uint64_t mid = 0;
-    pma::PackedMemoryArray pma(8 /* initial capacity */);
+    pma::PackedMemoryArray pma(4 /* initial capacity */);
 
-    pma.insertElement(0,0);
-    pma.insertElement(2,1);
-    pma.print(pma.segmentSize);
-    pma.insertElement(4,2);
-    pma.print(pma.segmentSize);
+//    pma.insertElement(6,60);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+//
+//    pma.insertElement(2,20);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+//
+//    pma.insertElement(4,40);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+//
+//    pma.insertElement(22,220);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+//
+//    pma.insertElement(0,0);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+//
+//    pma.insertElement(3,30);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+//
+//    pma.insertElement(48,480);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+//
+//    pma.insertElement(60,600);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+//
+//    pma.insertElement(0,600);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+
+   distInsert(pma, 100);
+//   pma.print(pma.segmentSize);
+
+
 //    pma.insertElement(6,3);
 //    pma.insertElement(8,4);
 //    pma.insertElement(12,6);
 //
-    pma.binarySearchPMA(3, &mid);
-    std::cout << "Find (3) : " << mid << std::endl;
-    pma.binarySearchPMA(5, &mid);
-    std::cout << "Find (5) : " << mid << std::endl;
-    pma.binarySearchPMA(11, &mid);
-    std::cout << "Find (11) : " << mid << std::endl;
-
+//    pma.binarySearchPMA(3, &mid);
+//    std::cout << "Find (3) : " << mid << std::endl;
+//    pma.binarySearchPMA(5, &mid);
+//    std::cout << "Find (5) : " << mid << std::endl;
+//    pma.binarySearchPMA(11, &mid);
+//    std::cout << "Find (11) : " << mid << std::endl;
+//
 //    distInsert(pma);
 //    pma.print(pma.segmentSize);
 

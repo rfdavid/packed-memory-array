@@ -3,9 +3,15 @@
 namespace pma {
 
 bool PackedMemoryArray::isSorted() {
+    int64_t previousData = -1;
     for (uint64_t i = 0; i < capacity - 1; i++) {
-        if (data[i] && data[i + 1] && data[i]->first > data[i + 1]->first) {
-            return false;
+        if (data[i]) {
+            if (data[i]->first < previousData) {
+//                std::cout << "=-=================================================================\n";
+ //               std::cout << "Error at index: " << i << ", data: " << data[i]->first << ", previous: " << previousData << std::endl;
+                return false;
+            }
+            previousData = data[i]->first;
         }
     }
     return true;
@@ -17,6 +23,18 @@ void PackedMemoryArray::printStats() {
         << ", number of segments: " << capacity / segmentSize
         << ", height: " << getTreeHeight() << ", cardinality: " << totalElements << std::endl;
 }
+
+void PackedMemoryArray::printIndices() {
+    std::cout << "Index: " << std::endl;
+    for (const auto& [k, v] : index) {
+        DEBUG_PRINT << k << " (" << v << ") " << std::endl;
+    }
+
+//    for (const auto& [k, v] : indexMap) {
+//        DEBUG_PRINT << k << " (" << v << ") " << std::endl;
+//    }
+}
+
 
 void PackedMemoryArray::print(int segmentSize, bool printIndex) {
     for (uint64_t i = 0; i < capacity; i++) {
