@@ -1,11 +1,17 @@
-#include "pma_key_value.hpp"
+#include "pma_index.hpp"
 
 namespace pma {
 
 bool PackedMemoryArray::isSorted() {
+    int64_t previousData = -1;
     for (uint64_t i = 0; i < capacity - 1; i++) {
-        if (data[i] && data[i + 1] && data[i]->first > data[i + 1]->first) {
-            return false;
+        if (data[i]) {
+            if (data[i]->first < previousData) {
+//                std::cout << "=-=================================================================\n";
+ //               std::cout << "Error at index: " << i << ", data: " << data[i]->first << ", previous: " << previousData << std::endl;
+                return false;
+            }
+            previousData = data[i]->first;
         }
     }
     return true;
@@ -17,6 +23,15 @@ void PackedMemoryArray::printStats() {
         << ", number of segments: " << capacity / segmentSize
         << ", height: " << getTreeHeight() << ", cardinality: " << totalElements << std::endl;
 }
+
+void PackedMemoryArray::printIndices() {
+    std::cout << "Index keys: ";
+    for (uint64_t i = 0; i <= indexKeys.size(); i++) {
+        std::cout << indexKeys[i] << " => " << indexValues[i] << "   ";
+    }
+    std::cout << std::endl;
+}
+
 
 void PackedMemoryArray::print(int segmentSize, bool printIndex) {
     for (uint64_t i = 0; i < capacity; i++) {
@@ -32,7 +47,7 @@ void PackedMemoryArray::print(int segmentSize, bool printIndex) {
             std::cout << "_ ";
         }
     }
-    std::cout << std::endl << std::endl;
+    std::cout << std::endl;
 }
 
 } // namespace pma

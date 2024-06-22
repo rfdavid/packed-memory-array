@@ -446,6 +446,8 @@ void BTreePMA_v2::insert(int64_t key, int64_t value){
     COUT_DEBUG("key: " << key << ", value: " << value);
 
     // Insert the given key/value in the subtree rooted at the given `node'.
+    // check if index.root is leaf. It is only leaf when the tree is still
+    // starting, hence unlikely
     if(UNLIKELY(index.root->is_leaf)){
         // the only difference is that Leaf includes next and prev pointers
         insert(reinterpret_cast<Leaf*>(index.root), key, value);
@@ -461,16 +463,20 @@ void BTreePMA_v2::insert(int64_t key, int64_t value){
     }
 }
 
+// node here is the index.root
 void BTreePMA_v2::insert(Node* node, int64_t key, int64_t value){
     assert(node != nullptr);
 
     // tail recursion on the internal nodes
+    // probably go down the tree until we reach the leaf
     while(!node->is_leaf){
         InternalNode* inode = reinterpret_cast<InternalNode*>(node);
         assert(inode->N > 0);
         size_t i = 0, last_key = inode->N -1;
         int64_t* __restrict inode_keys = keys(inode);
         while(i < last_key && key > inode_keys[i]) i++;
+
+        // probably node is defined, found the leaf
         node = children(inode)[i];
 
         // before moving to its child, check whether it is full. If this is the case
@@ -497,20 +503,24 @@ void BTreePMA_v2::insert_empty(int64_t key, int64_t value){
     COUT_DEBUG("key: " << key << ", value: " << value);
 
     Leaf* leaf = reinterpret_cast<Leaf*>(index.root);
+    // why values(leaf)[0] is equal to zero?
     values(leaf)[0] = 0;
+    // why cardinalities(leaf)[0] is equal to 1?
     cardinalities(leaf)[0] = 1;
     leaf->N = 1;
     assert(storage.m_capacity > 0 && "The storage does not have any capacity?");
+    // storage is the struct PMA (elements, capacity, segment_capacity, height, cardinality)
     storage.m_elements[0] = element_t{key, value};
     storage.m_cardinality = 1;
 }
 
+// insert key/value in the leaf?
 void BTreePMA_v2::insert_leaf(Leaf* leaf, int64_t key, int64_t value){
     assert(leaf != nullptr);
     assert(leaf->N <= index.leaf_b);
     COUT_DEBUG("leaf: " << leaf << ", key: " << key << ", value: " << value);
 
-    // edge case: this container is empty!
+    // very unlikely, only the first time
     if(UNLIKELY(leaf->empty())){
         assert(index.root == leaf); // this must be the very first element in the container!
         insert_empty(key, value);
@@ -519,8 +529,13 @@ void BTreePMA_v2::insert_leaf(Leaf* leaf, int64_t key, int64_t value){
     // regular case, find the position of the key in the leaf
     else {
         // find the position of the key in the leaf
+        // this is similar to find logic
         size_t i = 0;
         size_t N = leaf->N -1;
+        // when inserting the second element (1): 
+        //   keys(leaf) = 0
+        //   N = 0
+        //   i = 0
         int64_t* __restrict leaf_keys = keys(leaf);
         while(i < N && leaf_keys[i] < key) i++;
         insert_storage(leaf, i, key, value);
@@ -567,12 +582,14 @@ void BTreePMA_v2::index_leaf_augment(Leaf* leaf, size_t pos){
     leaf->N++;
 }
 
+// what is index_leaf?
 void BTreePMA_v2::insert_storage(Leaf* leaf, size_t index_leaf, int64_t key, int64_t value){
     uint64_t* values_leaf = values(leaf);
     size_t pos = values_leaf[index_leaf];
     COUT_DEBUG("pointed position from the index: " << pos);
 
     // find the actual position where we can insert in the storage
+    // to keep it sorted
     assert(storage.m_elements[pos].key >= 0 && "The index cannot point to an empty position in the storage!");
     while(pos < storage.m_capacity && key > storage.m_elements[pos].key){
         do { pos++; } while(pos < storage.m_capacity && storage.m_elements[pos].key < 0);
@@ -582,6 +599,8 @@ void BTreePMA_v2::insert_storage(Leaf* leaf, size_t index_leaf, int64_t key, int
     size_t index_insert {0};
 
     // edge case, we are trying to insert a new maximum for the PMA
+    // when inserting second element
+    // pos == storage.m_capacity == 8 why?
     if(pos == storage.m_capacity){
         size_t last_segment = storage_get_num_segments() -1;
         index_insert = last_segment * storage.m_segment_capacity + storage_get_segment_cardinality(last_segment);
@@ -669,6 +688,8 @@ int64_t BTreePMA_v2::find(int64_t key) const {
 
     // percolate on the inner nodes
     while(!node->is_leaf){
+        // InternalNode is the same as Node
+        // it has is_leaf, N (number of elements contained), and empty()
         InternalNode* inode = reinterpret_cast<InternalNode*>(node);
         size_t i = 0, sz = inode->N -1;
         int64_t* __restrict inode_keys = keys(inode);

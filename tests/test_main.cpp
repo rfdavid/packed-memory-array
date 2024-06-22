@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
-#include "pma_key_value.hpp"
+#include "pma_index.hpp"
 #include <list>
 #include <random>
 

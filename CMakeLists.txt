@@ -19,7 +19,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(Catch2)
 
-target_link_libraries(pma_key_value Catch2::Catch2)
+target_link_libraries(pma_index Catch2::Catch2)
 
 include(CTest)
 if(BUILD_TESTING AND CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
