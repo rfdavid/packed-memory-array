@@ -7,29 +7,27 @@ void distInsert(pma::PackedMemoryArray& pma, int total) {
     Timer t;
 
     std::random_device rd;
-    std::mt19937 eng(-1011927998);
+//    std::mt19937 eng(-1977937532);
     int seed = rd();
+    std::mt19937 eng(seed);
 
     DEBUG_PRINT << "Seed: " << seed << std::endl;
-    //std::mt19937 eng(seed);
     std::uniform_int_distribution<> distr(0, 100000);
 
     t.start();
     for (int count = total; count > 0; count--) {
-//        int num = distr(eng);
+        int num = distr(eng);
         pma.insertElement(count, count*10);
 
-        if (!pma.isSorted()) {
-            std::cout << "Not Sorted" << std::endl;
-            std::cout << "Index: " << count << std::endl;
-//            std::cout << "Element: " << num << std::endl;
-//            pma.print(pma.segmentSize, true);
- //           pma.printIndices();
-            break;
-        }
+//        if (!pma.isSorted()) {
+//            std::cout << "Not Sorted" << std::endl;
+//            std::cout << "Index: " << count << std::endl;
+//            std::cout << "Seed: " << seed << std::endl;
+//            exit(1);
+//        }
     }
     double time_taken = t.stop();
-//    std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
+    std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
 }
 
 void sumTest(pma::PackedMemoryArray& pma, int64_t min, int64_t max) {
@@ -56,10 +54,41 @@ int main() {
     uint64_t mid = 0;
     pma::PackedMemoryArray pma(4 /* initial capacity */);
 
-   distInsert(pma, 20);
+    pma.insertElement(8,70);
 
-   pma.insertElement(6,60);
-   pma.insertElement(4,40);
+//    pma.insertElement(6,60, 3);
+//    pma.insertElement(8,80, 4);
+
+
+    // test element
+    pma.insertElement(3,60);
+    pma.insertElement(4,60);
+    pma.insertElement(11,60);
+    pma.insertElement(10,60);
+    pma.insertElement(9,60);
+    pma.insertElement(20,60);
+    pma.insertElement(19,60);
+    pma.insertElement(18,60);
+
+    pma.insertElement(50497,60);
+    pma.insertElement(92828,60);
+    pma.insertElement(92002,60);
+
+    pma.insertElement(83565,60);
+    pma.insertElement(76954,60);
+
+    pma.insertElement(37201,60);
+    pma.insertElement(42963,60);
+    pma.insertElement(28061,60);
+    pma.insertElement(30981,60);
+
+    distInsert(pma, 1000000);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+
+
+//   pma.insertElement(6,60);
+//   pma.insertElement(4,40);
 
 //
 //    pma.insertElement(2,20);
@@ -91,8 +120,6 @@ int main() {
 //    pma.printIndices();
 //
 //    pma.insertElement(0,600);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
 
 //   pma.print(pma.segmentSize);
 

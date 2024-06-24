@@ -137,13 +137,13 @@ bool PackedMemoryArray::binarySearchPMA(uint64_t key, uint64_t *position) {
 // binary serach the index
 bool PackedMemoryArray::binarySearch(uint64_t key, uint64_t *position) {
     uint64_t left = 0;
-    uint64_t right = indexKeys.size();
+    uint64_t right = indexKeys.size() - 1;
     uint64_t mid = 0;
+
 
     // binary search the key
     while (left <= right) {
         mid = left + (right - left) / 2;
-
         uint64_t currentKey = indexKeys[mid];
 
         // key already exists
@@ -202,37 +202,24 @@ void PackedMemoryArray::rebalance(uint64_t left, uint64_t right) {
 
         auto segmentId = getSegmentId(pos);
 
+        // when the segment changes, we update the index
+        // with the first element of the segment
         if (segmentId != previousSegmentId) {
             DEBUG_PRINT << "Inserting index: " << elementsToResize[i].first << " at " << pos << std::endl;
-            indexKeys[segmentId] = elementsToResize[i].first;
-            indexValues[segmentId] = pos;
+
+            // prevent undefined behaviour
+            if (indexKeys.size() < segmentId + 1) {
+                // insert
+                indexKeys.push_back(elementsToResize[i].first);
+                indexValues.push_back(pos);
+            } else {
+                // update
+                indexKeys[segmentId] = elementsToResize[i].first;
+                indexValues[segmentId] = pos;
+            }
         }
 
         previousSegmentId = segmentId;
-
-      //  // update index: is pos the first element of the segment?
-      //  uint64_t segmentId = pos - (pos % segmentSize);
-
-      //  // new segment is starting
-      //  if (segmentId != previousSegmentId) {
-      //      // find the index key for that specific segment
-      //      auto indexKey = indexMap.find(segmentId);
-      //      // no key, new segment is starting
-      //      if (indexKey == indexMap.end()) {
-      //          // add to the index
-      //          index.insert(std::make_pair(elementsToResize[i].first, pos));
-      //      } else {
-      //          // update current index
-      //          auto element = index.find(indexKey->second);
-      //          // remove the old index
-      //          index.erase(element);
-      //          // insert the new index
-      //          index.insert(std::make_pair(elementsToResize[i].first, pos));
-      //      }
-      //      // add or update the indexMap
-      //      indexMap[segmentId] = elementsToResize[i].first;
-      //  }
-      //  previousSegmentId = segmentId;
     }
 }
 
@@ -403,13 +390,12 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
     DEBUG_PRINT << "\nInserting key: " << key << std::endl;
     HIGHLIGHT_END;
 
-
-    if (totalElements == 0) {
+    if (totalElements == 0) [[unlikely]] {
         // first time inserting
         insertElement(key, value, 0);
         // add first index here
-        indexKeys[0] = key;
-        indexValues[0] = 0;
+        indexKeys.push_back(key);
+        indexValues.push_back(0);
         return;
     }
 
@@ -419,9 +405,8 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
     // indexKeys   [ 10, 20 ]
     // indexValues [ 0,  3 ]
     uint64_t indexPosition = 0; 
-    if (binarySearch(key, &indexPosition)) return;
 
-    DEBUG_PRINT << "index position: " << indexPosition << std::endl;
+    if (binarySearch(key, &indexPosition)) return;
 
     // perform a linear search to find the desired position
     // starting from the index
@@ -429,7 +414,20 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
     uint64_t indexKey = indexKeys[indexPosition];
     uint64_t pmaPosition = indexValue;
 
-    if (indexValue > key) {
+    DEBUG_PRINT << "Using index: " << indexKey << " => " << indexValue << std::endl;
+
+    // indexKey is the actual element in the underlying PMA
+    // that was found in the index.
+    // we have to find if the element exists, if not, the closest one
+    // by performing a localized linear search
+    //
+    // first check if we have to right or left
+    // insert k = 24
+    // 6 _ 27 _ | 28 _ _ _
+    // assume idx = 28 was the found index
+    // 28 > 24
+    // go left until find an element less than 24
+    if (indexKey > key) {
         // go left
         DEBUG_PRINT << "going left" << std::endl;
         while (pmaPosition >= 0) {
@@ -441,9 +439,11 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
                 if (data[pmaPosition]->first < key) break;
             }
             if (pmaPosition == 0) break;
+            pmaPosition--;
         }
-    } else if (indexValue < key) {
+    } else if (indexKey < key) {
         // we have to go right
+        // and search for the first element greater than the key
         DEBUG_PRINT << "going right" << std::endl;
         while (pmaPosition < capacity) {
             if (data[pmaPosition]) {
@@ -461,70 +461,114 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
 
     // insert if it's a gap
     if (data[pmaPosition] == std::nullopt) {
+        DEBUG_PRINT << "It is a gap, inserting..." << std::endl;
         insertElement(key, value, pmaPosition);
         checkForRebalancing(pmaPosition);
 
-        printIndices();
-        print(segmentSize);
+//            if (data[i] && i <= indexValues[segmentId]) {
+
+        auto segmentId = getSegmentId(pmaPosition);
+//        auto segmentStartPos = pmaPosition - (pmaPosition % segmentSize);
+//        if (segmentStartPos == pmaPosition || pmaPosition <= indexValues[segmentId]) {
+        if (pmaPosition <= indexValues[segmentId]) {
+            DEBUG_PRINT << "updating index after insertion: " << key << " : " << pmaPosition << std::endl;
+            indexKeys[segmentId] = key;
+            indexValues[segmentId] = pmaPosition;
+        }
 
         return;
     }
 
     uint64_t nearestGap = findFirstGapFrom(pmaPosition);
+    DEBUG_PRINT << "nearest gap: " << nearestGap << std::endl;
+
+    int64_t segmentId = 0;
 
     // 'position' is where we want the element to be placed
     if (nearestGap > pmaPosition) {
         // gap found at the right
         DEBUG_PRINT << "gap found at the right" << std::endl; 
-        if (key > data[pmaPosition]->first) pmaPosition++;
 
-        // bring the gap to the left 
-        // 2 (20) 3 (30) _ _
-        // 0      1      2 3 
-        //               i
+        // adjust the position, keys is greater so we have to place at the
+        // right
+
+        if (key > data[pmaPosition]->first) pmaPosition++;
+        DEBUG_PRINT << "final position to be inserted: " << pmaPosition << std::endl;
+
+        // move the data to the right and update the index
+        // from the touched segments
         for (auto i = nearestGap; i > pmaPosition; i--) {
             // data to be moved is in i
             // move data
+            //    3     4    _
+            //   i-2   i-1   i
             data[i] = data[i - 1];
 
-            DEBUG_PRINT << "i: " << i << ", i - 1: " << i - 1 << std::endl;
-
-            // get segment id of i - 1
-            auto segmentId = getSegmentId(i - 1);
+            segmentId = getSegmentId(i);
             DEBUG_PRINT << "segment id: " << segmentId << std::endl;
-            // check the value of the index at that position
-            // value is the offset
-            auto indexValue = indexValues[segmentId];
-            
-            // is the indexed value the same as the current position?
-            // update the key
-            if (indexValue == i - 1) {
-                DEBUG_PRINT << "updating index" << std::endl;
-                DEBUG_PRINT << "pmapos: " << pmaPosition << std::endl;
-                if (pmaPosition == i - 1) {
-                    indexKeys[segmentId] = key;
-                } else {
-                    indexKeys[segmentId] = data[i - 1]->first;
-                }
+
+            if (data[i] && i <= indexValues[segmentId]) {
+                DEBUG_PRINT << "updating index: " << data[i]->first << " : " << i << std::endl;
+                indexKeys[segmentId] = data[i]->first;
+                indexValues[segmentId] = i;
             }
 
         }
         // insert the value into the desired position
+        insertElement(key, value, pmaPosition);
+        // is this element placed where the segment starts?
+        // the index shuld be update if: 
+        // 1. same segment id
+        // 2. inserted key is less than the current index key
+        segmentId = getSegmentId(pmaPosition); // not sure if this is needed, but will keep for now
+
+//        auto segmentStartPos = pmaPosition - (pmaPosition % segmentSize);
+//        if (segmentStartPos == pmaPosition || key < indexKeys[segmentId]) {
+        if (pmaPosition <= indexValues[segmentId]) {
+            DEBUG_PRINT << "updating index after insertion: " << key << " : " << pmaPosition << std::endl;
+            indexKeys[segmentId] = key;
+            indexValues[segmentId] = pmaPosition;
+        }
+
     } else {
         DEBUG_PRINT << "gap found at the left" << std::endl;
         // bring gap to the right
         if (key < data[pmaPosition]->first) pmaPosition--;
+        DEBUG_PRINT << "final position to be inserted (2): " << pmaPosition << std::endl;
 
+        // | 10 (60) _ _ 11 (60) _ 18 (60) _ 19 (60)  | 20 (60) 28061 (60) 37201 (60) 42963 (60) 50497 (60) _ 76954 (60) _  |
+        // | 10 (60) _ _ 11 (60) _ 18 (60) 19 (60) _  | 20 (60) 28061 (60) 37201 (60) 42963 (60) 50497 (60) _ 76954 (60) _  |
+        // | 10 (60) _ _ 11 (60) _ 18 (60) 19 (60) 20 (60) | _ 28061 (60) 37201 (60) 42963 (60) 50497 (60) _ 76954 (60) _  |
+        // | 10 (60) _ _ 11 (60) _ 18 (60) 19 (60) 20 (60) | 28061 (60) _ 37201 (60) 42963 (60) 50497 (60) _ 76954 (60) _  |
         for (auto i = nearestGap; i < pmaPosition; i++) {
             data[i] = data[i + 1];
+
+            segmentId = getSegmentId(i);
+
+            // if there data that now is in the beginning of the segment,
+            // update
+            if (data[i] && i <= indexValues[segmentId]) {
+                DEBUG_PRINT << "updating index: " << data[i]->first << " : " << i << std::endl;
+                indexKeys[segmentId] = data[i]->first;
+                indexValues[segmentId] = i;
+            }
+        }
+
+        insertElement(key, value, pmaPosition);
+        segmentId = getSegmentId(pmaPosition);
+//        auto segmentStartPos = pmaPosition - (pmaPosition % segmentSize);
+//        if (segmentStartPos == pmaPosition || key < indexKeys[segmentId]) {
+        if (pmaPosition <= indexValues[segmentId]) {
+            DEBUG_PRINT << "updating index after insertion: " << key << " : " << pmaPosition << std::endl;
+            indexKeys[segmentId] = key;
+            indexValues[segmentId] = pmaPosition;
         }
     }
 
-    insertElement(key, value, pmaPosition);
     checkForRebalancing(pmaPosition);
 
-    printIndices();
-    print(segmentSize);
+ //   printIndices();
+//    print(segmentSize);
 
 }
 
@@ -842,3 +886,28 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
 //    }
 //}
 
+
+
+      //  // update index: is pos the first element of the segment?
+      //  uint64_t segmentId = pos - (pos % segmentSize);
+
+      //  // new segment is starting
+      //  if (segmentId != previousSegmentId) {
+      //      // find the index key for that specific segment
+      //      auto indexKey = indexMap.find(segmentId);
+      //      // no key, new segment is starting
+      //      if (indexKey == indexMap.end()) {
+      //          // add to the index
+      //          index.insert(std::make_pair(elementsToResize[i].first, pos));
+      //      } else {
+      //          // update current index
+      //          auto element = index.find(indexKey->second);
+      //          // remove the old index
+      //          index.erase(element);
+      //          // insert the new index
+      //          index.insert(std::make_pair(elementsToResize[i].first, pos));
+      //      }
+      //      // add or update the indexMap
+      //      indexMap[segmentId] = elementsToResize[i].first;
+      //  }
+      //  previousSegmentId = segmentId;
