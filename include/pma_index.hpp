@@ -7,6 +7,7 @@
 
 #include <map>
 
+//#include "btree.h"
 
 #ifdef DEBUG
 #define DEBUG_PRINT std::cout
@@ -36,8 +37,6 @@ public:
         // from rma, 2^ceil(log2(log2(n)))
         // 2^ ceil(log2(log2(64))) = 2^ceil(log2(6)) = 2^ceil(3) = 8
         segmentSize = capacity;
-        indexKeys.reserve(noOfSegments());
-        indexValues.reserve(noOfSegments());
     }
 
     void insertElement(int64_t key, int64_t value);
@@ -48,7 +47,7 @@ public:
     void printIndices();
     bool isSorted();
 
-    int getSegmentId(uint64_t index) {
+    uint64_t getSegmentId(uint64_t index) {
         if (index == 0) return 0;
         return std::ceil(static_cast<double>(index) / segmentSize) - 1;
     }
@@ -71,20 +70,19 @@ public:
     uint64_t segmentSize;
     uint64_t capacity;
     uint64_t totalElements = 0;
-    bool binarySearchPMA(uint64_t key, uint64_t *position);
-    bool binarySearch(uint64_t key, uint64_t *position) ;
+    bool binarySearchPMA(uint64_t key, uint64_t *index);
 //    phmap::btree_set<std::tuple<uint64_t, uint64_t>> index;
 
-//    std::multimap<int64_t, int64_t> index;
-//    std::unordered_map<int64_t, int64_t> indexMap;
-    std::vector<int64_t> indexKeys;
-    std::vector<int64_t> indexValues;
+    std::multimap<int64_t, int64_t> index;
+    std::unordered_map<int64_t, int64_t> indexMap;
+    std::vector<std::optional<std::pair<int64_t, int64_t>>> data;
+
+    void insertElement(int key, int value, uint64_t index);
 
 private:
     double upperThresholdAtLevel(int level);
     double lowerThresholdAtLevel(int level);
     void rebalance(uint64_t left, uint64_t right);
-    void insertElement(int key, int value, uint64_t index);
     void getSegmentOffset(int level, int index, uint64_t *start, uint64_t *end);
     double getDensity(uint64_t left, uint64_t right);
     void doubleCapacity();
@@ -97,8 +95,6 @@ private:
     void updateIndex(int64_t start, int64_t end);
     void updateIndex(std::multimap<int64_t, int64_t>::iterator& lowerBoundElement);
 
-private:
-    std::vector<std::optional<std::pair<int64_t, int64_t>>> data;
 
     std::vector<std::pair<int64_t, int64_t>> elementsToResize;
 

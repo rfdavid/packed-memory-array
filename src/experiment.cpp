@@ -54,12 +54,20 @@ void runSumTest(pma::PackedMemoryArray& pma) {
 
 int main() {
     uint64_t mid = 0;
-    pma::PackedMemoryArray pma(4 /* initial capacity */);
+    pma::PackedMemoryArray pma(8 /* initial capacity */);
 
-   distInsert(pma, 20);
+    pma.insertElement(2,20, 0);
+    pma.insertElement(6,60, 3);
+    pma.insertElement(8,80, 4);
 
-   pma.insertElement(6,60);
-   pma.insertElement(4,40);
+    pma.print(pma.segmentSize);
+
+    pma.insertElement(0,60);
+
+//   distInsert(pma, 20);
+
+//   pma.insertElement(6,60);
+//   pma.insertElement(4,40);
 
 //
 //    pma.insertElement(2,20);
