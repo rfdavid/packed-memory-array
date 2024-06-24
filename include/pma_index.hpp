@@ -49,8 +49,7 @@ public:
     bool isSorted();
 
     int getSegmentId(uint64_t index) {
-        if (index == 0) return 0;
-        return std::ceil(static_cast<double>(index) / segmentSize) - 1;
+        return index / segmentSize;
     }
 
     bool elemExistsAt(int index) const {
@@ -80,11 +79,12 @@ public:
     std::vector<int64_t> indexKeys;
     std::vector<int64_t> indexValues;
 
+    void insertElement(int key, int value, uint64_t index);
+
 private:
     double upperThresholdAtLevel(int level);
     double lowerThresholdAtLevel(int level);
     void rebalance(uint64_t left, uint64_t right);
-    void insertElement(int key, int value, uint64_t index);
     void getSegmentOffset(int level, int index, uint64_t *start, uint64_t *end);
     double getDensity(uint64_t left, uint64_t right);
     void doubleCapacity();
