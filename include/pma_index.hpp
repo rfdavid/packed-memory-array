@@ -4,9 +4,7 @@
 #include <iostream>
 #include <optional>
 #include <cassert>
-
 #include <map>
-
 
 #ifdef DEBUG
 #define DEBUG_PRINT std::cout
@@ -19,7 +17,6 @@
 #endif
 
 namespace pma {
-
     // from rma for benchmarking
     struct SumResult {
         int64_t m_first_key = 0; // the first key that qualifies inside the interval [min, max]. Undefined if m_num_elements == 0
@@ -94,8 +91,9 @@ private:
     uint64_t findGapWithinSegment(uint64_t pos);
     void deleteElement(int key);
 
-    void updateIndex(int64_t start, int64_t end);
-    void updateIndex(std::multimap<int64_t, int64_t>::iterator& lowerBoundElement);
+    bool findClosestElement(uint64_t key, uint64_t indexPosition, uint64_t &pmaPosition);
+
+    void updateIndex(int64_t key, uint64_t pmaPosition);
 
 private:
     std::vector<std::optional<std::pair<int64_t, int64_t>>> data;
