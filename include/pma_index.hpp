@@ -26,15 +26,24 @@ namespace pma {
         int64_t m_sum_values = 0; // the aggregate sum of all values in the interval [min, max]
     };
 
+    struct KeyValue {
+        int64_t key;
+        int64_t value;
+        KeyValue(int64_t key, int64_t value) : key(key), value(value) {}
+    };
+
 class PackedMemoryArray {
 public:
     PackedMemoryArray(uint64_t capacity) : capacity(capacity) {
-        data = std::vector<std::optional<std::pair<int64_t, int64_t>>>(capacity, std::nullopt);
+        // data = std::vector<std::optional<std::pair<int64_t, int64_t>>>(capacity, std::nullopt);
+//        data = std::vector<std::optional<std::pair<int64_t, int64_t>>>(capacity, std::nullopt);
+
+        keyValues = std::vector<KeyValue>(capacity, KeyValue(-1, -1));
+
         // from rma, 2^ceil(log2(log2(n)))
         // 2^ ceil(log2(log2(64))) = 2^ceil(log2(6)) = 2^ceil(3) = 8
         segmentSize = capacity;
         indexKeys.reserve(noOfSegments());
-        indexValues.reserve(noOfSegments());
     }
 
     void insertElement(int64_t key, int64_t value);
@@ -50,10 +59,10 @@ public:
     }
 
     bool elemExistsAt(int index) const {
-        return data[index] != std::nullopt;
+        return keyValues[index].key != -1;
     }
     int64_t elemAt(int index) const {
-        return data[index]->first;
+        return keyValues[index].key;
     }
     uint64_t size() const {
         return capacity;
@@ -67,14 +76,14 @@ public:
     uint64_t segmentSize;
     uint64_t capacity;
     uint64_t totalElements = 0;
-    bool binarySearchPMA(uint64_t key, uint64_t *position);
+//    bool binarySearchPMA(uint64_t key, uint64_t *position);
     bool binarySearch(uint64_t key, uint64_t *position) ;
 //    phmap::btree_set<std::tuple<uint64_t, uint64_t>> index;
 
 //    std::multimap<int64_t, int64_t> index;
 //    std::unordered_map<int64_t, int64_t> indexMap;
     std::vector<int64_t> indexKeys;
-    std::vector<int64_t> indexValues;
+//    std::vector<int64_t> indexValues;
 
     void insertElement(int key, int value, uint64_t index);
 
@@ -91,14 +100,18 @@ private:
     uint64_t findGapWithinSegment(uint64_t pos);
     void deleteElement(int key);
 
+
     bool findClosestElement(uint64_t key, uint64_t indexPosition, uint64_t &pmaPosition);
 
     void updateIndex(int64_t key, uint64_t pmaPosition);
 
 private:
-    std::vector<std::optional<std::pair<int64_t, int64_t>>> data;
+    //std::vector<std::optional<std::pair<int64_t, int64_t>>> data;
 
-    std::vector<std::pair<int64_t, int64_t>> elementsToResize;
+    std::vector<KeyValue> keyValues;
+
+    // std::vector<std::pair<int64_t, int64_t>> elementsToResize;
+    std::vector<KeyValue> newKeys;
 
     // lower threshold at level 1
     static constexpr double p1 = 0.1;

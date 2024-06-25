@@ -5,13 +5,13 @@ namespace pma {
 bool PackedMemoryArray::isSorted() {
     int64_t previousData = -1;
     for (uint64_t i = 0; i < capacity - 1; i++) {
-        if (data[i]) {
-            if (data[i]->first < previousData) {
+        if (keyValues[i].key != -1) {
+            if (keyValues[i].key < previousData) {
 //                std::cout << "=-=================================================================\n";
  //               std::cout << "Error at index: " << i << ", data: " << data[i]->first << ", previous: " << previousData << std::endl;
                 return false;
             }
-            previousData = data[i]->first;
+            previousData = keyValues[i].key;
         }
     }
     return true;
@@ -38,11 +38,11 @@ void PackedMemoryArray::print(int segmentSize, bool printIndex) {
         if (i > 0 && segmentSize > 0 && i % segmentSize == 0) {
             std::cout << " | ";
         }
-        if (data[i] != std::nullopt) {
+        if (keyValues[i].key != -1) {
             if (printIndex) {
                 std::cout << i << ": ";
             }
-            std::cout << data[i]->first << " (" << data[i]->second << ") ";
+            std::cout << keyValues[i].key << " (" << keyValues[i].value << ") ";
         } else {
             std::cout << "_ ";
         }
