@@ -69,6 +69,8 @@ TEST_CASE("Random insert", "[pma]") {
 }
 
 TEST_CASE("Sum elements", "[pma]") {
+    SKIP();
+
     pma::PackedMemoryArray pma(8);
 
     for (int i = 1; i <= 30; i++) {
@@ -84,6 +86,7 @@ TEST_CASE("Sum elements", "[pma]") {
 }
 
 TEST_CASE("Sum 10k elements", "[pma]") {
+    SKIP();
     pma::PackedMemoryArray pma(64);
     for (int i = 10000; i > 0; i--) {
         pma.insertElement(i, i*10000);

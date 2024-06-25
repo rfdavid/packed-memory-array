@@ -7,7 +7,7 @@ void distInsert(pma::PackedMemoryArray& pma, int total) {
     Timer t;
 
     std::random_device rd;
-//    std::mt19937 eng(-1977937532);
+//    std::mt19937 eng(713057204);
     int seed = rd();
     std::mt19937 eng(seed);
 
@@ -16,7 +16,7 @@ void distInsert(pma::PackedMemoryArray& pma, int total) {
 
     t.start();
     for (int count = total; count > 0; count--) {
-        int num = distr(eng);
+//        int num = distr(eng);
         pma.insertElement(count, count*10);
 
 //        if (!pma.isSorted()) {
@@ -85,6 +85,7 @@ int main() {
     distInsert(pma, 1000000);
 //    pma.print(pma.segmentSize);
 //    pma.printIndices();
+
 
 
 //   pma.insertElement(6,60);
