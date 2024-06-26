@@ -27,7 +27,7 @@ void PackedMemoryArray::printStats() {
 void PackedMemoryArray::printIndices() {
     std::cout << "Index keys: ";
     for (uint64_t i = 0; i < indexStore.size(); i++) {
-        std::cout << indexStore[i].first << "   ";
+        std::cout << indexStore[i].first << "[" << indexStore[i].second << "]          ";
     }
     std::cout << std::endl;
 }

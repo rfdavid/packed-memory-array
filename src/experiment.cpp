@@ -56,8 +56,6 @@ int main() {
 
     pma.insertElement(8,70);
 
-    pma.print(pma.segmentSize);
-    pma.printIndices();
 //
 //    pma.insertElement(6,60, 3);
 //    pma.insertElement(8,80, 4);
@@ -68,10 +66,13 @@ int main() {
     pma.insertElement(4,60);
     pma.insertElement(11,60);
     pma.insertElement(10,60);
+
+
     pma.insertElement(9,60);
     pma.insertElement(20,60);
     pma.insertElement(19,60);
     pma.insertElement(18,60);
+
 
     pma.insertElement(50497,60);
     pma.insertElement(92828,60);
@@ -85,7 +86,15 @@ int main() {
     pma.insertElement(28061,60);
     pma.insertElement(30981,60);
 
+//    distInsert(pma, 10);
+//    pma.print(pma.segmentSize);
+//    pma.printIndices();
+
+
+//
+//
     distInsert(pma, 1000000);
+//    distInsert(pma, 10000);
 
 
 

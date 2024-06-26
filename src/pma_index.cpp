@@ -187,29 +187,160 @@ void PackedMemoryArray::rebalance(uint64_t left, uint64_t right) {
 
     // re-arrange data
     int64_t previousSegmentId = -1; 
+    int segElements = 0;
 
     for (uint64_t i = 0; i < numElements; i++) {
         uint64_t pos = i * step + left;
         data[pos] = elementsToResize[i];
 
         auto segmentId = getSegmentId(pos);
-
-        // when the segment changes, we update the index
-        // with the first element of the segment
+        // starting a new segment
         if (segmentId != previousSegmentId) {
-            //            DEBUG_PRINT << "Inserting index: " << elementsToResize[i].first << " at " << pos << std::endl;
-
-            // update
             indexStore[segmentId].first = elementsToResize[i].first;
             indexStore[segmentId].second = pos;
+
+            // not starting the segment, but finishing the last
+            if (previousSegmentId != -1) {
+                segmentSizes[previousSegmentId] = segElements;
+                segElements = 0;
+            }
         }
+
+        // count the number of elements for that segment
+        segElements++;
 
         previousSegmentId = segmentId;
     }
+    // update the last segment
+    segmentSizes[previousSegmentId] = segElements;
 }
+
+//void PackedMemoryArray::rebalance(uint64_t left, uint64_t right) {
+//    int segmentSize = right - left;
+//
+//    size_t numElements = std::count_if(data.begin() + left, data.begin() + right,
+//            [](const std::optional<std::pair<int64_t, int64_t>>& e) {
+//            return e.has_value();
+//            });
+//
+//    double step = static_cast<double>(segmentSize) / numElements;
+//
+//    std::vector<std::optional<std::pair<int64_t, int64_t>>> dataTemp;
+//    dataTemp.resize(numElements, std::nullopt);
+//
+//    int64_t previousSegmentId = -1; 
+//    uint64_t pmaNext = left - 1;
+//    // loop through num elements
+//    for (auto i = 0; i < numElements; i++) {
+//        // move to the next valid element in the PMA
+//        do { pmaNext++; } while(pmaNext < right && !data[pmaNext]); 
+//
+//        uint64_t pos = i * step;
+//        dataTemp[pos] = data[pmaNext];
+//
+//        auto segmentId = getSegmentId(pos + left);
+//        if (segmentId != previousSegmentId) {
+//            indexStore[segmentId].first = dataTemp[pos]->first;
+//            indexStore[segmentId].second = pos + left;
+//        }
+//
+//        previousSegmentId = segmentId;
+//    }
+//
+//    DEBUG_PRINT <<  "Data temp: " << std::endl;
+//    for (const auto& el : dataTemp) {
+//        if (el.has_value()) {
+//            DEBUG_PRINT << el->first << " ";
+//        } else {
+//            DEBUG_PRINT << " _ ";
+//        }
+//    }
+//
+//    DEBUG_PRINT << std::endl;
+//
+//    std::copy(dataTemp.begin(), dataTemp.end(), data.begin() + left); 
+//
+    // copy data temp to data
+
+
+//    int gaps = static_cast<double>(segmentSize) / numElements - 1;
+
+    // std::vector<std::optional<std::pair<int64_t, int64_t>>> dataTemp = std::vector<std::optional<std::pair<int64_t, int64_t>>>(segmentSize, std::nullopt);
+//    std::vector<std::optional<std::pair<int64_t, int64_t>>> dataTemp;
+//    dataTemp.reserve(numElements);
+//
+//    uint64_t x = 0;
+//    int64_t previousSegmentId = -1; 
+//
+//    uint64_t gapCount = 0;
+//
+//    for (auto i = left; i < right; i++) {
+//        if (data[i]) {
+//            dataTemp.push_back(data[i]);
+//            gapCount++;
+//        }
+//        
+//
+//            auto segmentId = getSegmentId(pos + left);
+//
+//            // when the segment changes, we update the index
+//            // with the first element of the segment
+//            if (segmentId != previousSegmentId) {
+//                // update
+//                indexStore[segmentId].first = dataTemp[pos]->first;
+//                indexStore[segmentId].second = pos + left;
+//            }
+//
+//            previousSegmentId = segmentId;
+//        }
+//    }
+//
+//    std::copy(dataTemp.begin(), dataTemp.end(), data.begin() + left); 
+// }
+
+// void PackedMemoryArray::rebalance(uint64_t left, uint64_t right) {
+//     int segmentSize = right - left;
+// 
+//     size_t numElements = std::count_if(data.begin() + left, data.begin() + right,
+//             [](const std::optional<std::pair<int64_t, int64_t>>& e) {
+//             return e.has_value();
+//             });
+// 
+//     double step = static_cast<double>(segmentSize) / numElements;
+// 
+//     // std::vector<std::optional<std::pair<int64_t, int64_t>>> dataTemp = std::vector<std::optional<std::pair<int64_t, int64_t>>>(segmentSize, std::nullopt);
+//     std::vector<std::optional<std::pair<int64_t, int64_t>>> dataTemp = std::vector<std::optional<std::pair<int64_t, int64_t>>>(segmentSize, std::nullopt);
+// 
+//     uint64_t x = 0;
+//     int64_t previousSegmentId = -1; 
+// 
+//     for (auto i = left; i < right; i++) {
+//         if (data[i]) {
+//             uint64_t pos = x * step;
+//             dataTemp[pos] = data[i];
+//             x++;
+// 
+//             auto segmentId = getSegmentId(pos + left);
+// 
+//             // when the segment changes, we update the index
+//             // with the first element of the segment
+//             if (segmentId != previousSegmentId) {
+//                 // update
+//                 indexStore[segmentId].first = dataTemp[pos]->first;
+//                 indexStore[segmentId].second = pos + left;
+//             }
+// 
+//             previousSegmentId = segmentId;
+//         }
+//     }
+// 
+//     std::copy(dataTemp.begin(), dataTemp.end(), data.begin() + left); 
+// }
 
 void PackedMemoryArray::insertElement(int key, int value, uint64_t index) {
     data[index] = std::make_pair(key, value);
+    auto segmentId = getSegmentId(index);
+    segmentSizes[segmentId] += 1;
     totalElements++;
 }
 
@@ -233,19 +364,33 @@ void PackedMemoryArray::getSegmentOffset(int level, int index, uint64_t *start, 
 }
 
 // calculate how any elements are in this segment
+// double PackedMemoryArray::getDensity(uint64_t left, uint64_t right) {
+//     // if the segment is the root level, we don't
+//     // need to perform a full linear search
+//     if (left == 0 && right == capacity) {
+//         return static_cast<double>(totalElements) / capacity;
+//     }
+//     int segmentElements = 0;
+//     for (uint64_t i = left; i < right; i++) {
+//         if (data[i] != std::nullopt) {
+//             segmentElements++;
+//         }
+//     }
+//     return static_cast<double>(segmentElements) / (right - left);
+// }
+
 double PackedMemoryArray::getDensity(uint64_t left, uint64_t right) {
-    // if the segment is the root level, we don't
-    // need to perform a full linear search
-    if (left == 0 && right == capacity) {
-        return static_cast<double>(totalElements) / capacity;
+    uint64_t total = 0;
+    for (auto i = left; i < right; i += segmentSize) {
+        auto segmentId = getSegmentId(i); 
+//        DEBUG_PRINT << "segmentId " << segmentId << ": " << segmentSizes[segmentId] << std::endl;
+        total += segmentSizes[segmentId];
     }
-    int segmentElements = 0;
-    for (uint64_t i = left; i < right; i++) {
-        if (data[i] != std::nullopt) {
-            segmentElements++;
-        }
-    }
-    return static_cast<double>(segmentElements) / (right - left);
+
+ //   DEBUG_PRINT << "total:" << total <<  std::endl;
+ //   print(segmentSize);
+ //   DEBUG_PRINT << std::endl;
+    return static_cast<double>(total) / (right - left);
 }
 
 // double capacity, resize and set the new segment size
@@ -255,6 +400,7 @@ void PackedMemoryArray::doubleCapacity() {
     // from rma, 2^ceil(log2(log2(n)))
     segmentSize = std::pow(2, std::ceil(log2(static_cast<double>(log2(capacity)))));
     indexStore.resize(noOfSegments());
+    segmentSizes.resize(noOfSegments(), 0);
 }
 
 // it will usually be used in the beginning of insertions
@@ -287,7 +433,6 @@ void PackedMemoryArray::checkForRebalancing(int index) {
         // get the segment start and end for the current level
         getSegmentOffset(level, index, &start, &end);
 
-        // calculate the density for that specific range
         double density = getDensity(start, end);
 
         if (level == 1) {
@@ -529,6 +674,16 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
         }
 
     }
+
+    // check if the gap is in another segment to update segment sizes
+    auto gapSegmentId = getSegmentId(nearestGap);
+    auto pmaSegmentId = getSegmentId(pmaPosition);
+    if (gapSegmentId != getSegmentId(pmaPosition)) {
+        segmentSizes[gapSegmentId]++;
+        // insertElement will increase
+        segmentSizes[pmaSegmentId]--;
+    }
+
 
     // insert the value into the desired position
     insertElement(key, value, pmaPosition);

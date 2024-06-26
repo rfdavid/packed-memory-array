@@ -34,6 +34,7 @@ public:
         // 2^ ceil(log2(log2(64))) = 2^ceil(log2(6)) = 2^ceil(3) = 8
         segmentSize = capacity;
         indexStore = std::vector<std::pair<int64_t, int64_t>>(noOfSegments());
+        segmentSizes = std::vector<int64_t>(noOfSegments(), 0);
 //        indexValues.reserve(noOfSegments());
     }
 
@@ -47,6 +48,10 @@ public:
 
     int getSegmentId(uint64_t index) {
         return index / segmentSize;
+    }
+
+    int getSegmentId(uint64_t index, uint64_t windowSize) {
+        return index / windowSize;
     }
 
     bool elemExistsAt(int index) const {
@@ -76,6 +81,7 @@ public:
 //   std::vector<int64_t> indexKeys;
 //    std::vector<int64_t> indexValues;
     std::vector<std::pair<int64_t, int64_t>> indexStore;
+    std::vector<int64_t> segmentSizes;
 
     void insertElement(int key, int value, uint64_t index);
 
@@ -85,6 +91,9 @@ private:
     void rebalance(uint64_t left, uint64_t right);
     void getSegmentOffset(int level, int index, uint64_t *start, uint64_t *end);
     double getDensity(uint64_t left, uint64_t right);
+
+//    double getDensity(int level, int segmentId, uint64_t right, uint64_t left);
+
     void doubleCapacity();
     bool checkIfFullAndRebalance();
     void checkForRebalancing(int index);
