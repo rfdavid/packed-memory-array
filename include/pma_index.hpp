@@ -33,8 +33,8 @@ public:
         // from rma, 2^ceil(log2(log2(n)))
         // 2^ ceil(log2(log2(64))) = 2^ceil(log2(6)) = 2^ceil(3) = 8
         segmentSize = capacity;
-        indexKeys.reserve(noOfSegments());
-        indexValues.reserve(noOfSegments());
+        indexStore = std::vector<std::pair<int64_t, int64_t>>(noOfSegments());
+//        indexValues.reserve(noOfSegments());
     }
 
     void insertElement(int64_t key, int64_t value);
@@ -73,8 +73,9 @@ public:
 
 //    std::multimap<int64_t, int64_t> index;
 //    std::unordered_map<int64_t, int64_t> indexMap;
-    std::vector<int64_t> indexKeys;
-    std::vector<int64_t> indexValues;
+//   std::vector<int64_t> indexKeys;
+//    std::vector<int64_t> indexValues;
+    std::vector<std::pair<int64_t, int64_t>> indexStore;
 
     void insertElement(int key, int value, uint64_t index);
 

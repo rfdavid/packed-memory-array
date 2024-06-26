@@ -56,6 +56,9 @@ int main() {
 
     pma.insertElement(8,70);
 
+    pma.print(pma.segmentSize);
+    pma.printIndices();
+//
 //    pma.insertElement(6,60, 3);
 //    pma.insertElement(8,80, 4);
 
@@ -83,8 +86,6 @@ int main() {
     pma.insertElement(30981,60);
 
     distInsert(pma, 1000000);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
 
 
 
