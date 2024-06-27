@@ -174,9 +174,10 @@ void PackedMemoryArray::rebalance(uint64_t left, uint64_t right) {
     }
 
     for (auto i = left; i < right; i++) {
-        if (data[i]) {
+        auto dt = data[i];
+        if (dt.has_value()) {
             // elementsToResize.push_back(data[i].value());
-            elementsToResize[numElements] = data[i].value();
+            elementsToResize[numElements] = dt.value();
             numElements++;
             // clear the segment after copying
             data[i] = std::nullopt;
