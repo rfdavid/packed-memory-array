@@ -1,18 +1,26 @@
-add_executable(pma_index pma_index.cpp pma_helper.cpp experiment.cpp)
-add_executable(pma_key_value pma_key_value.cpp experiment.cpp)
+add_library(pma_lib STATIC
+    pma_btree.cpp
+    pma_utils.cpp
+)
 
-set_target_properties(pma_key_value PROPERTIES
+# Include headers
+target_include_directories(pma_lib PUBLIC ${PROJECT_SOURCE_DIR}/include)
+
+# Add the main executable
+add_executable(pma_btree
+    experiment.cpp
+)
+
+# Set output directory for the executable within the src subdirectory context
+set_target_properties(pma_btree PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
-set_target_properties(pma_index PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
+# Link the library with the executable
+target_link_libraries(pma_btree PRIVATE pma_lib)
 
-add_library(pma_lib STATIC pma_index.cpp pma_helper.cpp)
-target_link_libraries(pma_lib)
-
+# Add debug definitions if in Debug mode
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  add_definitions(-DDEBUG)
+    target_compile_options(pma_btree PRIVATE -g)
+    target_compile_definitions(pma_btree PRIVATE -DDEBUG)
 endif()

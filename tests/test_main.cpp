@@ -1,8 +1,9 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_test_macros.hpp>
-#include "pma_index.hpp"
 #include <list>
 #include <random>
+
+#include "pma_btree.hpp"
 
 TEST_CASE("Insert sequential elements", "[pma]") {
     pma::PackedMemoryArray pma(8);
@@ -32,10 +33,10 @@ TEST_CASE("Insert 10k elements", "[pma]") {
 
     REQUIRE(pma.isSorted() == true);
     REQUIRE(pma.size() == 16384);
-    REQUIRE(pma.segmentSize == 16);
+    REQUIRE(pma.segmentSize() == 16);
     REQUIRE(pma.noOfSegments() == 1024);
     REQUIRE(pma.getTreeHeight() == 11);
-    REQUIRE(pma.totalElements == 10000);
+    REQUIRE(pma.totalElements() == 10000);
 }
 
 TEST_CASE("Insert 100k random big numbers", "[pma]") {
@@ -50,11 +51,11 @@ TEST_CASE("Insert 100k random big numbers", "[pma]") {
 
     REQUIRE(pma.isSorted() == true);
     REQUIRE(pma.size() == 131072);
-    REQUIRE(pma.segmentSize == 32);
+    REQUIRE(pma.segmentSize() == 32);
     REQUIRE(pma.noOfSegments() == 4096);
     REQUIRE(pma.getTreeHeight() == 13);
     // elements are random and not unique
-    REQUIRE(pma.totalElements > 63000);
+    REQUIRE(pma.totalElements() > 63000);
 }
 
 TEST_CASE("Random insert", "[pma]") {
@@ -68,34 +69,34 @@ TEST_CASE("Random insert", "[pma]") {
     REQUIRE(pma.isSorted() == true);
 }
 
-TEST_CASE("Sum elements", "[pma]") {
-    SKIP();
-
-    pma::PackedMemoryArray pma(8);
-
-    for (int i = 1; i <= 30; i++) {
-        pma.insertElement(i, i*10);
-    }
-
-    auto sum = pma.sum(5, 15);
-    REQUIRE(sum.m_first_key == 5);
-    REQUIRE(sum.m_last_key == 15);
-    REQUIRE(sum.m_num_elements == 11);
-    REQUIRE(sum.m_sum_keys == 110);
-    REQUIRE(sum.m_sum_values == 1100);
-}
-
-TEST_CASE("Sum 10k elements", "[pma]") {
-    SKIP();
-    pma::PackedMemoryArray pma(64);
-    for (int i = 10000; i > 0; i--) {
-        pma.insertElement(i, i*10000);
-    }
-
-    auto sum = pma.sum(5000, 10000);
-    REQUIRE(sum.m_first_key == 5000);
-    REQUIRE(sum.m_last_key == 10000);
-    REQUIRE(sum.m_num_elements == 5001);
-    REQUIRE(sum.m_sum_keys == 37507500);
-    REQUIRE(sum.m_sum_values == 375075000000);
-}
+// TEST_CASE("Sum elements", "[pma]") {
+//     SKIP();
+// 
+//     pma::PackedMemoryArray pma(8);
+// 
+//     for (int i = 1; i <= 30; i++) {
+//         pma.insertElement(i, i*10);
+//     }
+// 
+//     auto sum = pma.sum(5, 15);
+//     REQUIRE(sum.m_first_key == 5);
+//     REQUIRE(sum.m_last_key == 15);
+//     REQUIRE(sum.m_num_elements == 11);
+//     REQUIRE(sum.m_sum_keys == 110);
+//     REQUIRE(sum.m_sum_values == 1100);
+// }
+// 
+// TEST_CASE("Sum 10k elements", "[pma]") {
+//     SKIP();
+//     pma::PackedMemoryArray pma(64);
+//     for (int i = 10000; i > 0; i--) {
+//         pma.insertElement(i, i*10000);
+//     }
+// 
+//     auto sum = pma.sum(5000, 10000);
+//     REQUIRE(sum.m_first_key == 5000);
+//     REQUIRE(sum.m_last_key == 10000);
+//     REQUIRE(sum.m_num_elements == 5001);
+//     REQUIRE(sum.m_sum_keys == 37507500);
+//     REQUIRE(sum.m_sum_values == 375075000000);
+// }

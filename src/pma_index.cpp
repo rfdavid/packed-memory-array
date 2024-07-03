@@ -166,12 +166,8 @@ void PackedMemoryArray::rebalance(uint64_t left, uint64_t right) {
     int segmentSizeToRebalance = right - left;
 
     // temporary copy elements here
-    // idea: keep this vector globally and resize if necessary
-    // instead of instantiating it every time
-
-    if (segmentSizeToRebalance > elementsToResize.capacity()) {
-        elementsToResize.reserve(segmentSizeToRebalance);
-    }
+    std::vector<std::pair<int64_t, int64_t>> elementsToResize;
+    elementsToResize.reserve(segmentSizeToRebalance);
 
     for (auto i = left; i < right; i++) {
         auto dt = data[i];

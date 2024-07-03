@@ -8,9 +8,14 @@ int main() {
     std::cout << "Initialized" << std::endl;
 
     t.start();
-    for(int i = 0; i < 100; i++) {
-        btree.insert(i, i*10);
-    }
+//    for(int i = 0; i < 100; i++) {
+//        btree.insert(i, i*10);
+//    }
+
+    btree.insert(3, 0);
+    btree.insert(1, 0);
+    btree.insert(1, 0);
+    btree.insert(3, 0);
 
     double time_taken = t.stop();
     std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;

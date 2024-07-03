@@ -108,7 +108,6 @@ private:
 private:
     std::vector<std::optional<std::pair<int64_t, int64_t>>> data;
 
-    std::vector<std::pair<int64_t, int64_t>> elementsToResize;
 
     // lower threshold at level 1
     static constexpr double p1 = 0.1;
