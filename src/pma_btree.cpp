@@ -98,7 +98,6 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
             }
         }
     }
-    dump();
 }
 
 void PackedMemoryArray::getThresholds(size_t height, double& upper, double& lower) const {
@@ -149,7 +148,7 @@ bool PackedMemoryArray::rebalance(uint64_t segmentId, int64_t key, int64_t value
     if (density <= theta) {
         // TODO: insert the element
 //        spread_insert spread_insert {newKey, newValue, segmentId};
-        spread(numElements, windowStart, windowLength);
+        spread(numElements - 1 /* havent insertedy yet */, windowStart, windowLength);
         return false;
     } else {
         // TODO: refactor, resize and insert
@@ -164,7 +163,6 @@ bool PackedMemoryArray::rebalance(uint64_t segmentId, int64_t key, int64_t value
 // 	3.	Spread non-null elements from the original segment into this new chunk.
 // 	4.	Copy the new chunk back over the original segment.
 void PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t numOfSegments) {
-    std::cout << "Spread: " << numElements << " => " << windowStart << ":" << numOfSegments << std::endl;
     int64_t* keys;
     int64_t* values;
 
@@ -181,10 +179,14 @@ void PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t nu
     int64_t* __restrict currentKeys = storage.keys + windowStart * storage.segmentCapacity;
     int64_t* __restrict currentValues = storage.values + windowStart * storage.segmentCapacity;
     int16_t* __restrict segmentElementsCount = storage.segmentElementsCount + windowStart;
+
+    for (auto i = 0; i < numOfSegments; i++) {
+        INDEX->remove_any(getMinimum(windowStart + i));
+    }
+
     
     for (auto i = 0; i < numOfSegments; i++) {
         // remove all index from that segment
-        INDEX->remove_any(getMinimum(windowStart + i));
 
         size_t segmentElements = elementsPerSegment + (i < oddSegments);
         size_t currentIndex = i * storage.segmentCapacity;
@@ -193,19 +195,19 @@ void PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t nu
         uint64_t firstKey = -1;
 
         for(size_t j = 0; j < segmentElements; j++) {
-            keys[currentIndex] = currentKeys[indexNext];
-            values[currentIndex] = currentValues[indexNext];
-            insertedElements++;
-
+            // TODO: check a way to not have this condition
             if (insertedElements < storage.numElements) {
+                keys[currentIndex] = currentKeys[indexNext];
+                values[currentIndex] = currentValues[indexNext];
+                insertedElements++;
+
                 do { indexNext++; } while (currentKeys[indexNext] < 0);
-            } else {
-                break;
             }
 
+            // beginning new segment
             if (firstKey == -1) {
                 firstKey = keys[currentIndex];
-                INDEX->insert(firstKey, i);
+                INDEX->insert(firstKey, i + windowStart);
             }
 
             // next position to set
@@ -213,6 +215,8 @@ void PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t nu
         }
         segmentElementsCount[i] = segmentElements;
     }
+    memcpy(currentKeys, keys, numOfSegments * storage.segmentCapacity * sizeof(keys[0]));
+    memcpy(currentValues, values, numOfSegments * storage.segmentCapacity * sizeof(values[0]));
 }
 
 void PackedMemoryArray::resize() {
@@ -280,15 +284,14 @@ void PackedMemoryArray::resize() {
         uint64_t firstKey = -1;
 
         for(size_t j = 0; j < segmentElements; j++) {
-            keys[currentIndex] = oldKeys[indexNext];
-            values[currentIndex] = oldValues[indexNext];
-            insertedElements++;
-
+            // TODO: check a way to avoid this condition
             if (insertedElements < storage.numElements) {
+                keys[currentIndex] = oldKeys[indexNext];
+                values[currentIndex] = oldValues[indexNext];
+                insertedElements++;
+
                 do { indexNext++; } while (oldKeys[indexNext] < 0);
-            } else {
-                break;
-            }
+            } 
 
             if (firstKey == -1) {
                 firstKey = keys[currentIndex];
@@ -429,7 +432,7 @@ void PackedMemoryArray::dump() {
             std::cout << " " << keys[i] << " ";
         }
     }
-    std::cout << std::endl;
+    std::cout << std::endl << std::endl;
 }
 
 bool PackedMemoryArray::isSorted() {

@@ -72,7 +72,7 @@ int main() {
 //    pma.insertElement(18,60);
 //    pma.insertElement(999,60);
 
-    distInsert(pma, 50);
+    distInsert(pma, 100000);
 
 //
 //
