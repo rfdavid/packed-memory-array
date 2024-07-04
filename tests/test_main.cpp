@@ -33,14 +33,15 @@ TEST_CASE("Insert 10k elements", "[pma]") {
 
     REQUIRE(pma.isSorted() == true);
     REQUIRE(pma.size() == 16384);
-    REQUIRE(pma.segmentSize() == 16);
-    REQUIRE(pma.noOfSegments() == 1024);
-    REQUIRE(pma.getTreeHeight() == 11);
+    REQUIRE(pma.segmentSize() == 64);
+    REQUIRE(pma.noOfSegments() == 256);
+//    REQUIRE(pma.getTreeHeight() == 11);
+    REQUIRE(pma.getTreeHeight() == 9);
     REQUIRE(pma.totalElements() == 10000);
 }
 
 TEST_CASE("Insert 100k random big numbers", "[pma]") {
-    pma::PackedMemoryArray pma(8);
+    pma::PackedMemoryArray pma(64);
     std::random_device rd;
     std::mt19937 eng(rd());
     std::uniform_int_distribution<> distr(1, 100000);
@@ -51,9 +52,11 @@ TEST_CASE("Insert 100k random big numbers", "[pma]") {
 
     REQUIRE(pma.isSorted() == true);
     REQUIRE(pma.size() == 131072);
-    REQUIRE(pma.segmentSize() == 32);
-    REQUIRE(pma.noOfSegments() == 4096);
-    REQUIRE(pma.getTreeHeight() == 13);
+    REQUIRE(pma.segmentSize() == 64);
+    // REQUIRE(pma.noOfSegments() == 4096);
+    REQUIRE(pma.noOfSegments() == 2048);
+    // REQUIRE(pma.getTreeHeight() == 13);
+    REQUIRE(pma.getTreeHeight() == 12);
     // elements are random and not unique
     REQUIRE(pma.totalElements() > 63000);
 }

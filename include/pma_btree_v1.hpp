@@ -4,6 +4,7 @@
 #include <memory> // unique_ptr
 #include <vector>
 
+#include "dynamic_index.hpp"
 
 namespace pma {
 
@@ -30,9 +31,8 @@ class PackedMemoryArray {
     PackedMemoryArray(uint64_t segmentCapacity);
 
     // pointer for the index
+    void* index; // dynamic (a,b)-tree from "dynamic_index.hpp"
     PMA storage;
-
-    std::vector<int64_t> indexVec;
 
     void initializeIndex(size_t btreeParams, size_t storageParams);
     void insertElement(int64_t key, int64_t value);
@@ -70,8 +70,6 @@ class PackedMemoryArray {
     }
 
     void dump();
-
-    void dumpIndex();
 
     /* index */
     void updateIndex(int64_t oldKey, int64_t newKey);
