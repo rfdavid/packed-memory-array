@@ -4,10 +4,16 @@
 #include <memory> // unique_ptr
 #include <vector>
 
-
 namespace pma {
 
-size_t hyperceil(size_t value);
+struct SumResult {
+    int64_t m_first_key = 0; // the first key that qualifies inside the interval [min, max]. Undefined if m_num_elements == 0
+    int64_t m_last_key = 0; // the last key that qualifies inside the interval [min, max]. Undefined if m_num_elements == 0
+    uint64_t m_num_elements = 0; // the total number of elements inside the interval [min, max]
+    int64_t m_sum_keys = 0; // the aggregate sum of all keys in the interval [min, max]
+    int64_t m_sum_values = 0; // the aggregate sum of all values in the interval [min, max]
+};
+
 
 struct PMA {
     int64_t* keys;
@@ -34,13 +40,15 @@ class PackedMemoryArray {
 
     std::vector<int64_t> indexVec;
 
+    SumResult sum(int64_t min, int64_t max);
+
     void initializeIndex(size_t btreeParams, size_t storageParams);
     void insertElement(int64_t key, int64_t value);
     void insertEmpty(int64_t key, int64_t value);
-    bool insertCommon(uint64_t segmentId, int64_t key, int64_t value);
-    bool rebalance(uint64_t segmentId, int64_t key, int64_t value);
-    void spread(size_t numElements, size_t windowStart, size_t windowLength);
-    void resize();
+    int64_t insertCommon(uint64_t segmentId, int64_t key, int64_t value);
+    int rebalance(uint64_t segmentId, int64_t key, int64_t value);
+    int spread(size_t numElements, size_t windowStart, size_t windowLength, int64_t key);
+    int resize(int64_t key);
     bool isSorted();
 
     uint64_t getSegmentCount(uint64_t segmentId) const;
@@ -48,6 +56,7 @@ class PackedMemoryArray {
     uint64_t indexFindLeq(int64_t key) const;
 
     void getThresholds(size_t height, double& upper, double& lower) const;
+
 
     int getTreeHeight () const {
         return storage.height;
@@ -69,12 +78,14 @@ class PackedMemoryArray {
         return storage.capacity / storage.segmentCapacity;
     }
 
+    bool elemExistsAt(int64_t index) const {
+        return storage.keys[index] > 0;
+    }
+
     void dump();
+    void dumpValues();
 
     void dumpIndex();
-
-    /* index */
-    void updateIndex(int64_t oldKey, int64_t newKey);
 
     static constexpr double ph = 0.50;
 

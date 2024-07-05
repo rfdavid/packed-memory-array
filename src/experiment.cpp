@@ -12,7 +12,7 @@ void distInsert(pma::PackedMemoryArray& pma, int total) {
 //    std::mt19937 eng(seed);
 
     std::cout << "Seed: " << seed << std::endl;
-    std::uniform_int_distribution<> distr(1, 100000000);
+    std::uniform_int_distribution<> distr(1, 100);
 
     t.start();
     for (int count = 0; count < total; count++) {
@@ -52,7 +52,7 @@ void distInsert(pma::PackedMemoryArray& pma, int total) {
 
 int main() {
     uint64_t mid = 0;
-    pma::PackedMemoryArray pma(64 /* initial capacity */);
+    pma::PackedMemoryArray pma(4 /* initial capacity */);
 
 //    pma.insertElement(8,70);
 //
@@ -73,7 +73,16 @@ int main() {
 //    pma.insertElement(999,60);
 
     distInsert(pma, 10000000);
+//    pma.dumpValues();
+
+//    distInsert(pma, 12);
 //    pma.dump();
+
+//    for (int i = 200; i > 0; i--) {
+//        pma.insertElement(i, i*10000);
+//        pma.dump();
+//    }
+
 //    std::cout << "is sorted? " << ( pma.isSorted() ? "true" : "false" ) << std::endl;
 
 //

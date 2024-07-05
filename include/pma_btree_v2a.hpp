@@ -1,11 +1,9 @@
-/* use dynamic index */
 #include <cinttypes>
 #include <cmath>
 #include <iostream>
 #include <memory> // unique_ptr
 #include <vector>
 
-#include "dynamic_index.hpp"
 
 namespace pma {
 
@@ -32,15 +30,16 @@ class PackedMemoryArray {
     PackedMemoryArray(uint64_t segmentCapacity);
 
     // pointer for the index
-    void* index; // dynamic (a,b)-tree from "dynamic_index.hpp"
     PMA storage;
+
+    std::vector<int64_t> indexVec;
 
     void initializeIndex(size_t btreeParams, size_t storageParams);
     void insertElement(int64_t key, int64_t value);
     void insertEmpty(int64_t key, int64_t value);
-    bool insertCommon(uint64_t segmentId, int64_t key, int64_t value);
+    int64_t insertCommon(uint64_t segmentId, int64_t key, int64_t value);
     bool rebalance(uint64_t segmentId, int64_t key, int64_t value);
-    void spread(size_t numElements, size_t windowStart, size_t windowLength);
+    void spread(size_t numElements, size_t windowStart, size_t windowLength, int64_t key, int64_t value);
     void resize();
     bool isSorted();
 
@@ -71,6 +70,8 @@ class PackedMemoryArray {
     }
 
     void dump();
+
+    void dumpIndex();
 
     /* index */
     void updateIndex(int64_t oldKey, int64_t newKey);
