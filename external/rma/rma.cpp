@@ -16,6 +16,13 @@ int main() {
     btree.insert(1, 0);
     btree.insert(1, 0);
     btree.insert(3, 0);
+    btree.insert(3, 0);
+    btree.insert(2, 0);
+    btree.insert(1, 0);
+    btree.insert(99, 0);
+    btree.insert(99, 0);
+    btree.insert(101, 0);
+    btree.insert(3, 0);
 
     double time_taken = t.stop();
     std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;

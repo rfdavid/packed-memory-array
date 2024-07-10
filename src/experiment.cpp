@@ -1,23 +1,25 @@
 #include <random>
 
-#include "timer.hpp" // from reddragon
-#include "pma_btree.hpp"
+#include "../include/timer.hpp" // from reddragon
+#include "../include/pma_btree.hpp"
 
 void distInsert(pma::PackedMemoryArray& pma, int total) {
     Timer t;
 
     std::random_device rd;
     std::mt19937 eng(-1892682211);
-    int seed = rd();
+//    int seed = rd();
 //    std::mt19937 eng(seed);
 
-    std::cout << "Seed: " << seed << std::endl;
-    std::uniform_int_distribution<> distr(1, 100);
+//    std::cout << "Seed: " << seed << std::endl;
+    // std::uniform_int_distribution<> distr(1, 100);
+    std::uniform_int_distribution<> distr(0, 100000000);
 
     t.start();
     for (int count = 0; count < total; count++) {
 //        int num = distr(eng);
         pma.insertElement(count, count*10);
+        // pma.insertElement(count, count*10);
 
 //        if (!pma.isSorted()) {
 //            std::cout << "Not Sorted" << std::endl;
@@ -54,6 +56,24 @@ int main() {
     uint64_t mid = 0;
     pma::PackedMemoryArray pma(4 /* initial capacity */);
 
+    pma.insertElement(8,70);
+    pma.insertElement(8,71);
+    pma.insertElement(8,72);
+    pma.insertElement(8,73);
+    pma.insertElement(8,74);
+    pma.insertElement(8,75);
+    pma.insertElement(8,76);
+    pma.insertElement(8,77);
+    pma.insertElement(8,78);
+
+    pma.insertElement(1,78);
+    pma.insertElement(9,78);
+    pma.insertElement(10,78);
+    pma.insertElement(2,78);
+    pma.insertElement(3,78);
+
+    pma.dump();
+
 //    pma.insertElement(8,70);
 //
 //    pma.insertElement(6,60, 3);
@@ -72,7 +92,8 @@ int main() {
 //    pma.insertElement(18,60);
 //    pma.insertElement(999,60);
 
-    distInsert(pma, 10000000);
+//    distInsert(pma, 10000000);
+
 //    pma.dumpValues();
 
 //    distInsert(pma, 12);
