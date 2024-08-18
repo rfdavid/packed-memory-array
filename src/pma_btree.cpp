@@ -139,21 +139,6 @@ int PackedMemoryArray::rebalance(uint64_t segmentId, int64_t key, int64_t value)
     int windowId = segmentId;
     int windowStart = segmentId;
     int windowEnd = segmentId;
-
-    // [       abcd      ]  h = 3
-    // [  ab   ] [  cd   ]  h = 2
-    // [ aaa bbb ccc ddd ]  h = 1
-    //   0    1   2   3
-    //   ccc is full
-    //
-    //   storage.height = 3
-    //   indexLeft = 1
-    //   indexRight = 3
-    //   windowId = 1
-    //   windowLength = 2
-    //   height = 2
-    //   windowStart = 1 * 2 = 2 (inclusive)
-    //   windowEnd = 2 + 2 = 4
     int indexLeft = segmentId - 1;
     int indexRight = segmentId + 1;
 
@@ -300,9 +285,6 @@ int PackedMemoryArray::resize(int64_t key) {
     size_t inputSegmentId = 0;
     size_t inputSize = oldElementsCount[0];
 
-//    int64_t* inputKeys = oldKeys + storage.segmentCapacity - inputSize;
-//    int64_t* inputValues = oldValues + storage.segmentCapacity - inputSize;
-
     // next non-empty value
     size_t indexNext = 0;
 
@@ -349,117 +331,11 @@ int64_t PackedMemoryArray::insertCommon(uint64_t segmentId, int64_t key, int64_t
 
     // check if the inserted key is the new minimum.
     // this will be used to update the index
-//    size_t segmentElementsCount = storage.segmentElementsCount[segmentId];
 
-    // find the position to insert the element
-    // 
-    //  3  4  8  _  _  9  10  11
-    // insert 20:
-    //
-    // searchKey = 3
-    // key = 20
-    // 3 < 20
     
     int lastGap = -1;
     int insertPos = -1;
     int64_t minimum = key;
-
-    // 
-    //
-    //   - keys[i] == gap?  gapIdx = i
-    //   - keys[i] > key
-    //         gapIdx == i-1?
-    //            insert at i-1
-    //         else 
-    //            shift gapIdx to i-1
-    //            insert at i-1
-    //
-    //         gapIdx == null?
-    //            find gapIdx starting from i+1 (gapIdx is > i)
-    //            shift gapIdx to i
-    //
-    //    i == segment size - 1
-    //         keys[i] == null?
-    //            insert at i
-    //         else
-    //            shift gapIdx to i
-    //
-    //     1  3  4  8  _  
-    //     _  4  8  9  10 
-    //     2  _  _  4  10 
-    //
-    //     key < keys[i]
-    //       copy = keys[i]
-    //       keys[i] = key
-    //       key = copy
-    //
-    //    keys[i] == null
-    //       keys[i] = key
-    //       copy = null
-    //
-//
-//    int64_t gapIndex = -1;
-//    for (int i = 0; i < storage.segmentCapacity; i++) {
-//        if (keys[i] == -1) {
-//            // it is a gap
-//            gapIndex = i;
-//        } else {
-//            // not a gap
-//            // keys[i] > key?
-//            if (keys[i] > key) {
-//                // gap index is not defined?
-//                if (gapIndex == -1) {
-//                    // find the next gap
-//                    for (gapIndex = i + 1; keys[gapIndex] > -1; gapIndex++);
-//                    // shift the gap to i
-//                    // gap is on the right, so shift elements to right
-//                    while (gapIndex > i) {
-//                        keys[gapIndex] = keys[gapIndex - 1];
-//                        values[gapIndex] = values[gapIndex - 1];
-//                        gapIndex--;
-//                    }
-//                    // insert at i
-//                    keys[i] = key;
-//                    values[i] = value;
-//                } else {
-//                    // gap index is already defined
-//                    // shift gap index to the desired position if necessary
-//                    // ex: insert 8
-//                    //     _  4  6  9  10 
-//                    //     g        i
-//                    //     4  6  _  9  10 
-//                    //           g       
-//                    while(gapIndex != i - 1) {
-//                        keys[gapIndex] = keys[gapIndex + 1];
-//                        values[gapIndex] = values[gapIndex + 1];
-//                        gapIndex++;
-//                    }
-//                    // insert at gapIndex
-//                    keys[gapIndex] = key;
-//                    values[gapIndex] = value;
-//                }
-//            }
-//        }
-//
-//        if (storage.segmentCapacity - 1 == i) {
-//            // last element
-//            if (keys[i] == -1) {
-//                // insert at i
-//                keys[i] = key;
-//                values[i] = value;
-//            } else {
-//                // shift gap index to i
-//                while (gapIndex != i) {
-//                    keys[gapIndex] = keys[gapIndex - 1];
-//                    values[gapIndex] = values[gapIndex - 1];
-//                    gapIndex--;
-//                }
-//                keys[gapIndex] = key;
-//                values[gapIndex] = value;
-//            }
-//        }
-//    }
-
 
     // first scan: find the first gap and where the element should be placed
     // second scan: shift the elements to insert the element
@@ -487,49 +363,51 @@ int64_t PackedMemoryArray::insertCommon(uint64_t segmentId, int64_t key, int64_t
             }
         }
     }
-
-    // 3  4  8  _  _  _  10  11
-    //                ^   ^
-    // insert 9
-    // last gap = 5
-    // insertPos = 6
-    //
-    // 3  4  8  _  9  10  11  20
-    //          ^             ^
-    // insert 19
-    // last gap = 3
-    // insertPos = 7
-    //
-    //              |           |           |
-    //  0  1  _  _  2  3  _  _  4  5  _  _  6  7  8  9
-    //  insert 10
-    //
-    //
     
     // we have to insert at the end of the segment
     if (insertPos == -1) {
         // if there is no gap, we have to shift the elements
         if (lastGap != storage.segmentCapacity - 1) {
             // move gap to the right
-            for (auto i = lastGap; i < storage.segmentCapacity - 1; i++) {
-                keys[i] = keys[i + 1];
-                values[i] = values[i + 1];
-            }
+//            for (auto i = lastGap; i < storage.segmentCapacity - 1; i++) {
+//                keys[i] = keys[i + 1];
+//                values[i] = values[i + 1];
+//            }
+
+            size_t numElements = storage.segmentCapacity - lastGap - 1;
+
+            std::memmove(&keys[lastGap], // destination
+                    &keys[lastGap + 1],  // source
+                    numElements * sizeof(keys[0])); // number of bytes
+
+            std::memmove(&values[lastGap], // destination
+                    &values[lastGap + 1],  // source
+                    numElements * sizeof(values[0])); // number of bytes
         }
         insertPos = storage.segmentCapacity - 1;
     } else if (lastGap < insertPos) {
         // move gap to the right
-        for (auto i = lastGap; i < insertPos; i++) {
-            keys[i] = keys[i + 1];
-            values[i] = values[i + 1];
-        }
+//        for (auto i = lastGap; i < insertPos; i++) {
+//            keys[i] = keys[i + 1];
+//            values[i] = values[i + 1];
+//        }
+
+        size_t numElements = insertPos - lastGap;
+        std::memmove(&keys[lastGap], &keys[lastGap + 1], numElements * sizeof(keys[0]));
+
+        // Move values
+        std::memmove(&values[lastGap], &values[lastGap + 1], numElements * sizeof(values[0]));
         insertPos--;
     } else if (lastGap > insertPos) {
         // shift right
-        for (auto i = lastGap; i > insertPos; i--) {
-            keys[i] = keys[i - 1];
-            values[i] = values[i - 1];
-        }
+//        for (auto i = lastGap; i > insertPos; i--) {
+//            keys[i] = keys[i - 1];
+//            values[i] = values[i - 1];
+//        }
+
+        size_t numElements = lastGap - insertPos;
+        std::memmove(&keys[insertPos + 1], &keys[insertPos], numElements * sizeof(keys[0]));
+        std::memmove(&values[insertPos + 1], &values[insertPos], numElements * sizeof(values[0]));
     }
 
     keys[insertPos] = key;
@@ -556,7 +434,7 @@ uint64_t PackedMemoryArray::getSegmentCount(uint64_t segmentId) const {
     return storage.segmentElementsCount[segmentId];
 }
 
-// binary serach the index
+// binary search the index
 uint64_t PackedMemoryArray::indexFindLeq(int64_t key) const {
     int64_t left = 0;
     int64_t right = indexVec.size() - 1;
@@ -585,7 +463,7 @@ void PackedMemoryArray::dumpIndex() {
     }
 }
 
-void PackedMemoryArray::dumpValues() { 
+void PackedMemoryArray::dumpValues() {
     int64_t* keys = storage.keys;
     for (size_t i = 0; i < storage.capacity; i++) {
         if (keys[i] != -1) {
@@ -594,7 +472,7 @@ void PackedMemoryArray::dumpValues() {
     }
 }
 
-void PackedMemoryArray::dump() { 
+void PackedMemoryArray::dump() {
     int64_t* keys = storage.keys;
     for (size_t i = 0; i < storage.capacity; i++) {
         if (keys[i] == -1) {
@@ -624,38 +502,3 @@ bool PackedMemoryArray::isSorted() {
 
 
 } // namespace pma
-
-
-
-//    int lastGap = -1;
-//    for (int i = 0; i < storage.segmentCapacity; i++) {
-//        if (keys[i] == -1) {
-//            // found a gap
-//            lastGap = i;
-//        } else {
-//            // not a gap, is the key greater than the current key?
-//            if (keys[i] > key) {
-//                // element should be placed at the last found gap
-//                if (gap == -1) {
-//                    // no gaps, shift the elements
-//                    for (auto j = storage.segmentCapacity - 1; j > i; j--) {
-//                        if (keys[j] != -1) {
-//                        keys[j] = keys[j - 1];
-//                        values[j] = values[j - 1];
-//                    }
-//                }
-//                break;
-//            } else {
-//                if (gap != -1) {
-//                    // shift if there is a gap
-//                    keys[i - 1] = keys[i];
-//                    keys[i] = -1;
-//                    // set the new last gap to insert
-//                    lastGap = i;
-//
-//                    // shift values too
-//                    values[i - 1] = values[i];
-//                }
-//            }
-//        }
-//    }

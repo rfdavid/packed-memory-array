@@ -1,4 +1,5 @@
 #include <random>
+#include <chrono>
 
 #include "../include/timer.hpp" // from reddragon
 #include "../include/pma_btree.hpp"
@@ -54,25 +55,38 @@ void distInsert(pma::PackedMemoryArray& pma, int total) {
 
 int main() {
     uint64_t mid = 0;
-    pma::PackedMemoryArray pma(4 /* initial capacity */);
+    pma::PackedMemoryArray pma(64 /* initial capacity */);
 
-    pma.insertElement(8,70);
-    pma.insertElement(8,71);
-    pma.insertElement(8,72);
-    pma.insertElement(8,73);
-    pma.insertElement(8,74);
-    pma.insertElement(8,75);
-    pma.insertElement(8,76);
-    pma.insertElement(8,77);
-    pma.insertElement(8,78);
+    auto start = std::chrono::high_resolution_clock::now();
 
-    pma.insertElement(1,78);
-    pma.insertElement(9,78);
-    pma.insertElement(10,78);
-    pma.insertElement(2,78);
-    pma.insertElement(3,78);
+    for (int i = 0; i < 10000000; i++) {
+        pma.insertElement(i, i*10);
+    }
 
-    pma.dump();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    std::cout << "Time taken by function: "
+        << duration.count() << " microseconds" << std::endl;
+
+//
+//    pma.insertElement(8,70);
+//    pma.insertElement(8,71);
+//    pma.insertElement(8,72);
+//    pma.insertElement(8,73);
+//    pma.insertElement(8,74);
+//    pma.insertElement(8,75);
+//    pma.insertElement(8,76);
+//    pma.insertElement(8,77);
+//    pma.insertElement(8,78);
+//
+//    pma.insertElement(1,78);
+//    pma.insertElement(9,78);
+//    pma.insertElement(10,78);
+//    pma.insertElement(2,78);
+//    pma.insertElement(3,78);
+//
+//    pma.dump();
 
 //    pma.insertElement(8,70);
 //
