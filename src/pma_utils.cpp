@@ -1,4 +1,4 @@
-#include "pma_btree.hpp"
+#include "pma.hpp"
 
 namespace pma {
 

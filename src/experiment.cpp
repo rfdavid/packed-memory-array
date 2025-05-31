@@ -1,61 +1,54 @@
 #include <random>
 #include <chrono>
+#include <map>
 
-#include "../include/timer.hpp" // from reddragon
-#include "../include/pma_btree.hpp"
+#include "../include/pma.hpp"
 
-void distInsert(pma::PackedMemoryArray& pma, int total) {
-    Timer t;
+void benchmarkPMA_random() {
+    pma::PackedMemoryArray pma(128);
+    std::vector<int64_t> keys(10000000);
+    
+    std::mt19937_64 rng(42); // fixed seed for reproducibility
+    std::uniform_int_distribution<int64_t> dist(0, 1LL << 40);
 
-    std::random_device rd;
-    std::mt19937 eng(-1892682211);
-//    int seed = rd();
-//    std::mt19937 eng(seed);
+    for (auto& k : keys) k = dist(rng);
+    
+    auto start = std::chrono::high_resolution_clock::now();
 
-//    std::cout << "Seed: " << seed << std::endl;
-    // std::uniform_int_distribution<> distr(1, 100);
-    std::uniform_int_distribution<> distr(0, 100000000);
-
-    t.start();
-    for (int count = 0; count < total; count++) {
-//        int num = distr(eng);
-        pma.insertElement(count, count*10);
-        // pma.insertElement(count, count*10);
-
-//        if (!pma.isSorted()) {
-//            std::cout << "Not Sorted" << std::endl;
-//            std::cout << "Index: " << count << std::endl;
-//            std::cout << "Seed: " << seed << std::endl;
-//            exit(1);
-//        }
+    for (auto k : keys) {
+        pma.insertElement(k, k * 10);
     }
-    double time_taken = t.stop();
-    std::cout << "Head Inserts: " << time_taken/10000000.0 << std::endl;
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    std::cout << "PMA random: " << duration.count() << " us" << std::endl;
 }
 
-// void sumTest(pma::PackedMemoryArray& pma, int64_t min, int64_t max) {
-//     pma::SumResult result = pma.sum(min, max);
-//     std::cout << "First Key: " << result.m_first_key << std::endl;
-//     std::cout << "Last Key: " << result.m_last_key << std::endl;
-//     std::cout << "Sum Keys: " << result.m_sum_keys << std::endl;
-//     std::cout << "Sum Values: " << result.m_sum_values << std::endl;
-//     std::cout << "Num Elements: " << result.m_num_elements << std::endl << std::endl;
-// }
-// 
-// void runSumTest(pma::PackedMemoryArray& pma) {
-//     sumTest(pma, 0, 10); // 55
-//     sumTest(pma, 1, 10); // 55
-//     sumTest(pma, 2, 10); // 54
-//     sumTest(pma, 10, 15); // 75
-//     sumTest(pma, 98, 200); // 197
-//     sumTest(pma, 98, 200); // 197
-//     sumTest(pma, 28, 28); // 28
-// }
-// 
+void benchmarkMAP_random() {
+    std::map<int64_t, int64_t> map;
+    std::vector<int64_t> keys(10000000);
 
-int main() {
+    std::mt19937_64 rng(42); // fixed seed for reproducibility
+    std::uniform_int_distribution<int64_t> dist(0, 1LL << 40);
+
+    for (auto& k : keys) k = dist(rng);
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (auto k : keys) {
+        map.insert({k, k * 10});
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    std::cout << "std::map random: " << duration.count() << " us" << std::endl;
+}
+
+void benchmarkPMA() {
     uint64_t mid = 0;
-    pma::PackedMemoryArray pma(64 /* initial capacity */);
+    pma::PackedMemoryArray pma(128 /* initial capacity */);
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -68,144 +61,26 @@ int main() {
 
     std::cout << "Time taken by function: "
         << duration.count() << " microseconds" << std::endl;
+}
 
-//
-//    pma.insertElement(8,70);
-//    pma.insertElement(8,71);
-//    pma.insertElement(8,72);
-//    pma.insertElement(8,73);
-//    pma.insertElement(8,74);
-//    pma.insertElement(8,75);
-//    pma.insertElement(8,76);
-//    pma.insertElement(8,77);
-//    pma.insertElement(8,78);
-//
-//    pma.insertElement(1,78);
-//    pma.insertElement(9,78);
-//    pma.insertElement(10,78);
-//    pma.insertElement(2,78);
-//    pma.insertElement(3,78);
-//
-//    pma.dump();
+void benchmarkMAP() {
+    std::map<int64_t, int64_t> map;
 
-//    pma.insertElement(8,70);
-//
-//    pma.insertElement(6,60, 3);
-//    pma.insertElement(8,80, 4);
-//    pma.insertElement(3,60);
-//    pma.insertElement(4,60);
-//    pma.insertElement(11,60);
-//    pma.insertElement(10,60);
-//
-//    pma.insertElement(9,60);
-//    pma.insertElement(19,60);
-//
-//    pma.insertElement(0,60);
-//    pma.insertElement(1,60);
-//
-//    pma.insertElement(18,60);
-//    pma.insertElement(999,60);
+    auto start = std::chrono::high_resolution_clock::now();
 
-//    distInsert(pma, 10000000);
+    for (int i = 0; i < 10000000; i++) {
+        map.insert({i, i*10});
+    }
 
-//    pma.dumpValues();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-//    distInsert(pma, 12);
-//    pma.dump();
+    std::cout << "Time taken by function: "
+        << duration.count() << " microseconds" << std::endl;
+}
 
-//    for (int i = 200; i > 0; i--) {
-//        pma.insertElement(i, i*10000);
-//        pma.dump();
-//    }
-
-//    std::cout << "is sorted? " << ( pma.isSorted() ? "true" : "false" ) << std::endl;
-
-//
-//
-//    pma.insertElement(50497,60);
-//    pma.insertElement(92828,60);
-//    pma.insertElement(92002,60);
-//
-//    pma.insertElement(83565,60);
-//    pma.insertElement(76954,60);
-//
-//    pma.insertElement(37201,60);
-//    pma.insertElement(42963,60);
-//    pma.insertElement(28061,60);
-//    pma.insertElement(30981,60);
-
-//    distInsert(pma, 10);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
-
-
-//
-//
-//    distInsert(pma, 1000000);
-//    distInsert(pma, 10000);
-
-
-
-//   pma.insertElement(6,60);
-//   pma.insertElement(4,40);
-
-//
-//    pma.insertElement(2,20);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
-//
-//    pma.insertElement(4,40);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
-//
-//    pma.insertElement(22,220);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
-//
-//    pma.insertElement(0,0);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
-//
-//    pma.insertElement(3,30);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
-//
-//    pma.insertElement(48,480);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
-//
-//    pma.insertElement(60,600);
-//    pma.print(pma.segmentSize);
-//    pma.printIndices();
-//
-//    pma.insertElement(0,600);
-
-//   pma.print(pma.segmentSize);
-
-
-//    pma.insertElement(6,3);
-//    pma.insertElement(8,4);
-//    pma.insertElement(12,6);
-//
-//    pma.binarySearchPMA(3, &mid);
-//    std::cout << "Find (3) : " << mid << std::endl;
-//    pma.binarySearchPMA(5, &mid);
-//    std::cout << "Find (5) : " << mid << std::endl;
-//    pma.binarySearchPMA(11, &mid);
-//    std::cout << "Find (11) : " << mid << std::endl;
-//
-//    distInsert(pma);
-//    pma.print(pma.segmentSize);
-
-//    uint64_t index = pma.binarySearchPMA(12);
-//    sumTest(pma, 28, 28); // 28
-//
-//    std::cout << "Index: " << index << std::endl;
-
-
-    // pma.rebalance(0, pma.capacity - 1);
-//    pma.printStats();
-//    pma.checkIfSorted();
-
+int main() {
+    benchmarkPMA();
+//    benchmarkMAP_random();
     return 0;
 }

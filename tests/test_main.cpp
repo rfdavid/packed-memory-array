@@ -3,7 +3,7 @@
 #include <list>
 #include <random>
 
-#include "pma_btree.hpp"
+#include "pma.hpp"
 
 TEST_CASE("Insert sequential elements", "[pma]") {
     pma::PackedMemoryArray pma(8);
@@ -70,35 +70,4 @@ TEST_CASE("Random insert", "[pma]") {
     }
 
     REQUIRE(pma.isSorted() == true);
-}
-
-TEST_CASE("Sum elements", "[pma]") {
-    pma::PackedMemoryArray pma(8);
-
-    for (int i = 1; i <= 30; i++) {
-        pma.insertElement(i, i*10);
-    }
-
-    auto sum = pma.sum(5, 15);
-    REQUIRE(sum.m_first_key == 5);
-    REQUIRE(sum.m_last_key == 15);
-    REQUIRE(sum.m_num_elements == 11);
-    REQUIRE(sum.m_sum_keys == 110);
-    REQUIRE(sum.m_sum_values == 1100);
-}
-
-
-TEST_CASE("Sum 10k elements", "[pma]") {
-    SKIP();
-    pma::PackedMemoryArray pma(64);
-    for (int i = 10000; i > 0; i--) {
-        pma.insertElement(i, i*10000);
-    }
-
-    auto sum = pma.sum(5000, 10000);
-    REQUIRE(sum.m_first_key == 5000);
-    REQUIRE(sum.m_last_key == 10000);
-    REQUIRE(sum.m_num_elements == 5001);
-    REQUIRE(sum.m_sum_keys == 37507500);
-    REQUIRE(sum.m_sum_values == 375075000000);
 }

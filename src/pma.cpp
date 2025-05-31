@@ -1,22 +1,23 @@
-/* use array as index */
-#include "../include/pma_btree.hpp"
+/**
+ * @file pma.cpp
+ * @brief Implementation of the Packed Memory Array (PMA)
+ */
+
+#include "pma.hpp"
 
 namespace pma {
 
 /* Initialize PMA structure */
-
 PMA::PMA(size_t segmentSize) : segmentCapacity(segmentSize) {
-    // segmentCapacity = std::pow(2, std::ceil(log2(static_cast<double>(log2(segmentSize)))));
     capacity = segmentCapacity;
     height = 1;
     numElements = 0;
 
-    // memory allocations
-    allocSegments(1 /* num of segments */, segmentSize, &keys, &values, &segmentElementsCount);
+    // Allocate initial memory for one segment
+    allocSegments(1, segmentSize, &keys, &values, &segmentElementsCount);
 }
 
-// free resources
-PMA::~PMA(){
+PMA::~PMA() {
     free(keys);
     free(values);
     free(segmentElementsCount);
@@ -25,69 +26,33 @@ PMA::~PMA(){
     segmentElementsCount = nullptr;
 }
 
-SumResult PackedMemoryArray::sum(int64_t min, int64_t max) {
-    // find min
-    auto segmentId = indexFindLeq(min);
-    size_t start = segmentId * storage.segmentCapacity;
-    size_t segmentEnd = start + storage.segmentCapacity;
-
-    SumResult result;
-
-    // find start position
-    while (start < segmentEnd && storage.keys[start] < min) {
-        start++;
-    }
-
-    result.m_first_key = storage.keys[start];
-
-    // sum
-
-    auto currentKey = storage.keys[start];
-    while (start < storage.capacity && currentKey < max) {
-        currentKey = storage.keys[start];
-        if (currentKey > 0) {
-            result.m_num_elements++;
-            result.m_sum_keys += currentKey;
-            result.m_sum_values += storage.values[start];
-        }
-        start++;
-    }
-
-    // find last
-    do { start--; } while (storage.keys[start] < 0);
-    result.m_last_key = storage.keys[start];
-
-    return result;
-}
-
-// TODO: abstract the struct with alignas
 void PMA::allocSegments(size_t numOfSegments, size_t segmentCapacity, 
-        int64_t** keys, int64_t** values, decltype(segmentElementsCount)* segmentElementsCount){
-    // reset the ptrs
+        int64_t** keys, int64_t** values, decltype(segmentElementsCount)* segmentElementsCount) {
+    // Reset pointers
     *keys = nullptr;
     *values = nullptr;
     *segmentElementsCount = nullptr;
-    // TODO: check if memory was successfully acquired
-    posix_memalign((void**) keys, 64 /* alignment */, numOfSegments * segmentCapacity * sizeof(keys[0]) /* size */ );
-    posix_memalign((void**) values, 64, numOfSegments * segmentCapacity * sizeof(values[0]));
-    posix_memalign((void**) segmentElementsCount, 64,  numOfSegments * sizeof(segmentElementsCount[0]));
 
+    // Allocate aligned memory for each array
+    posix_memalign((void**) keys, 64, numOfSegments * segmentCapacity * sizeof(keys[0]));
+    posix_memalign((void**) values, 64, numOfSegments * segmentCapacity * sizeof(values[0]));
+    posix_memalign((void**) segmentElementsCount, 64, numOfSegments * sizeof(segmentElementsCount[0]));
+
+    // Initialize arrays
     memset(*keys, -1, numOfSegments * segmentCapacity * sizeof(keys[0]));
     memset(*segmentElementsCount, 0, numOfSegments * sizeof(segmentElementsCount[0]));
 }
 
-/* Packed Memory Array Class */
+// ============================================================================
+// PackedMemoryArray Implementation
+// ============================================================================
 
-// Initialize Packed Memory array:
-// - create a dynamic (a,b)-tree index
-// - initializa PMA struct with the initial segment capacity
-PackedMemoryArray::PackedMemoryArray(uint64_t segmentCapacity) : 
-     storage(segmentCapacity) {
+PackedMemoryArray::PackedMemoryArray(uint64_t segmentCapacity) : storage(segmentCapacity) {
     indexVec.resize(1, -1);
 }
 
 PackedMemoryArray::~PackedMemoryArray() {
-    // TODO: use smart pointers
+    // Memory is managed by PMA destructor
 }
 
 void PackedMemoryArray::insertEmpty(int64_t key, int64_t value) {
@@ -101,27 +66,24 @@ void PackedMemoryArray::insertElement(int64_t key, int64_t value) {
     if (storage.numElements == 0) [[unlikely]] {
         insertEmpty(key, value);
         indexVec[0] = key;
-    } else {
-        // find the segment which index is less or equal than the key
-        auto segmentId = indexFindLeq(key);
-        
-        // is this segment full?
-        if (getSegmentCount(segmentId) == storage.segmentCapacity) {
-            segmentId = rebalance(segmentId, key, value);
-        }
-
-        int64_t newMinValue = insertCommon(segmentId, key, value);
-
-        if (newMinValue > 0) {
-            indexVec[segmentId] = newMinValue;
-        }
+        return;
     }
 
- //   dump();
-//   dumpIndex();
+    // Find the appropriate segment for insertion
+    auto segmentId = indexFindLeq(key);
+    
+    // Rebalance if segment is full
+    if (getSegmentCount(segmentId) == storage.segmentCapacity) {
+        segmentId = rebalance(segmentId, key, value);
+    }
+
+    // Insert the element and update index if needed
+    int64_t newMinValue = insertCommon(segmentId, key, value);
+    if (newMinValue > 0) {
+        indexVec[segmentId] = newMinValue;
+    }
 }
 
-// TODO: cache thresholds
 void PackedMemoryArray::getThresholds(size_t height, double& lower, double& upper) const {
     double diff = (((double) storage.height) - height) / storage.height;
     lower = ph - 0.25 * diff;
@@ -135,6 +97,7 @@ int PackedMemoryArray::rebalance(uint64_t segmentId, int64_t key, int64_t value)
     double density = static_cast<double>(numElements)/storage.segmentCapacity;
     size_t height = 1;
 
+    // Initialize window parameters
     int windowLength = 1;
     int windowId = segmentId;
     int windowStart = segmentId;
@@ -142,6 +105,7 @@ int PackedMemoryArray::rebalance(uint64_t segmentId, int64_t key, int64_t value)
     int indexLeft = segmentId - 1;
     int indexRight = segmentId + 1;
 
+    // Find the smallest window that can accommodate the elements
     do {
         height++;
         windowLength *= 2;
@@ -150,23 +114,22 @@ int PackedMemoryArray::rebalance(uint64_t segmentId, int64_t key, int64_t value)
         windowEnd = windowStart + windowLength;
         getThresholds(height, rho, theta);
 
-        // find the number of elements in the interval
+        // Count elements in the window
         while (indexLeft >= windowStart) {
             numElements += getSegmentCount(indexLeft);
             indexLeft--;
         }
-        while (indexRight < windowEnd){
+        while (indexRight < windowEnd) {
             numElements += getSegmentCount(indexRight);
             indexRight++;
         }
 
         density = ((double) numElements) / (windowLength * storage.segmentCapacity);
-
-      // while is not balanced and we have not reached the top level
     } while (density > theta && height < storage.height);
 
+    // Either spread elements or resize the array
     if (density <= theta) {
-        return spread(numElements - 1 /* havent inserted yet */, windowStart, windowLength, key);
+        return spread(numElements - 1, windowStart, windowLength, key);
     } else {
         return resize(key);
     }
@@ -180,7 +143,6 @@ int PackedMemoryArray::rebalance(uint64_t segmentId, int64_t key, int64_t value)
 int PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t numOfSegments, int64_t key) {
     int64_t* keys;
     int64_t* values;
-
     int segmentToInsert = windowStart;
 
     // allocate memory for the new segment
@@ -199,6 +161,7 @@ int PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t num
     size_t indexNext = 0;
     size_t insertedElements = 0;
 
+    // Get pointers to the current window
     int64_t* __restrict currentKeys = storage.keys + windowStart * storage.segmentCapacity;
     int64_t* __restrict currentValues = storage.values + windowStart * storage.segmentCapacity;
     int16_t* __restrict segmentElementsCount = storage.segmentElementsCount + windowStart;
@@ -206,9 +169,8 @@ int PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t num
     // find the first non-empty element index
     while (currentKeys[indexNext] < 0) indexNext++;
     
+    // Redistribute elements across segments
     for (auto i = 0; i < numOfSegments; i++) {
-        // remove all index from that segment
-
         size_t segmentElements = elementsPerSegment + (i < oddSegments);
         size_t currentIndex = i * storage.segmentCapacity;
         segmentElementsCount[i] = segmentElements;
@@ -220,21 +182,24 @@ int PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t num
             segmentToInsert = i + windowStart;
         }
 
+        // Copy elements to new positions
         for(auto j = 0; j < segmentElements; j++) {
             keys[currentIndex] = currentKeys[indexNext];
             values[currentIndex] = currentValues[indexNext];
             insertedElements++;
 
-            if (insertedElements >= numElements)  break;
+            if (insertedElements >= numElements) break;
 
             do { indexNext++; } while (currentKeys[indexNext] < 0);
-            // next position to set
             currentIndex++;
         }
-        segmentElementsCount[i] = segmentElements;
     }
+
+    // Copy back to original arrays
     memcpy(currentKeys, keys, numOfSegments * storage.segmentCapacity * sizeof(keys[0]));
     memcpy(currentValues, values, numOfSegments * storage.segmentCapacity * sizeof(values[0]));
+    
+    // Cleanup
     free(keys);
     free(values);
 
@@ -242,57 +207,46 @@ int PackedMemoryArray::spread(size_t numElements, size_t windowStart, size_t num
 }
 
 int PackedMemoryArray::resize(int64_t key) {
-    size_t numOfSegments, oddSegments, elementsPerSegment;
+    // Calculate new capacity and parameters
+    storage.capacity *= 2;
+    size_t numOfSegments = storage.capacity / storage.segmentCapacity;
     size_t numElements = storage.numElements;
+    size_t elementsPerSegment = numElements / numOfSegments;
+    size_t oddSegments = numElements % numOfSegments;
     int segmentToInsert = 0;
 
-    storage.capacity *= 2;
-//    storage.segmentCapacity = std::pow(2, std::ceil(log2(static_cast<double>(log2(storage.capacity)))));
-    numOfSegments = storage.capacity / storage.segmentCapacity;
-    elementsPerSegment = numElements / numOfSegments;
-    oddSegments = numElements % numOfSegments;
-
+    // Update height
     storage.height = std::log2(storage.capacity / storage.segmentCapacity) + 1;
-
     indexVec.resize(numOfSegments, -1);
 
+    // Allocate new storage
     int64_t* oldKeys;
     int64_t* oldValues;
     int16_t* oldElementsCount;
-
-    // allocate where the new PMA will be
-    // use 'old' because it will swap the pointers
     PMA::allocSegments(numOfSegments, storage.segmentCapacity, &oldKeys, &oldValues, &oldElementsCount);
 
-    // oldKeys, oldValues and oldElementsCount will point to the old storage
+    // Swap old and new storage
     std::swap(oldKeys, storage.keys);
     std::swap(oldValues, storage.values);
     std::swap(oldElementsCount, storage.segmentElementsCount);
 
-    // let unique_ptr to take responsibiltiy to free the old storage memory
-    // using a custom deleter
+    // Use smart pointers for automatic cleanup
     auto xFreePtr = [](void* ptr){ free(ptr); };
     std::unique_ptr<int64_t, decltype(xFreePtr)> oldKeysPtr { oldKeys, xFreePtr };
     std::unique_ptr<int64_t, decltype(xFreePtr)> oldValuesPtr { oldValues, xFreePtr };
     std::unique_ptr<int16_t, decltype(xFreePtr)> oldElementsCountPtr { oldElementsCount, xFreePtr };
 
-    // initialize the key pointers for the new allocated space
+    // Get pointers to new storage
     int64_t* __restrict keys = storage.keys;
     int64_t* __restrict values = storage.values;
     int16_t* __restrict segmentElementsCount = storage.segmentElementsCount;
 
-    // fetch the first non-empty input segment
-    size_t inputSegmentId = 0;
-    size_t inputSize = oldElementsCount[0];
-
-    // next non-empty value
+    // Find first non-empty element
     size_t indexNext = 0;
-
-    // find first non-empty segment
     while (oldKeys[indexNext] < 0) indexNext++;
 
+    // Redistribute elements
     size_t insertedElements = 0;
-
     for (auto i = 0; i < numOfSegments; i++) {
         size_t segmentElements = elementsPerSegment + (i < oddSegments);
         size_t currentIndex = i * storage.segmentCapacity;
@@ -301,132 +255,92 @@ int PackedMemoryArray::resize(int64_t key) {
         auto currentKey = oldKeys[indexNext];
         indexVec[i] = currentKey;
 
-        // find the segment to insert
         if (currentKey < key) {
             segmentToInsert = i;
         }
 
+        // Copy elements to new positions
         for(size_t j = 0; j < segmentElements; j++) {
             keys[currentIndex] = oldKeys[indexNext];
             values[currentIndex] = oldValues[indexNext];
             insertedElements++;
 
-            if (insertedElements == numElements)  break;
+            if (insertedElements == numElements) break;
 
             do { indexNext++; } while (oldKeys[indexNext] < 0);
-
-            // next position to set
             currentIndex++;
         }
-        segmentElementsCount[i] = segmentElements;
     }
 
     return segmentToInsert;
 }
 
 int64_t PackedMemoryArray::insertCommon(uint64_t segmentId, int64_t key, int64_t value) {
-    // start pointers
+    // Get pointers to segment
     int64_t* __restrict keys = storage.keys + segmentId * storage.segmentCapacity;
     int64_t* __restrict values = storage.values + segmentId * storage.segmentCapacity;
 
-    // check if the inserted key is the new minimum.
-    // this will be used to update the index
-
-    
+    // Find insertion position and check if key is new minimum
     int lastGap = -1;
     int insertPos = -1;
     int64_t minimum = key;
 
-    // first scan: find the first gap and where the element should be placed
-    // second scan: shift the elements to insert the element
+    // First scan: find gap and insertion position
     for (int i = 0; i < storage.segmentCapacity; i++) {
         auto searchKey = keys[i];
-        // check if it is a gap
         if (searchKey == -1) {
-            // set last gap
             lastGap = i;
-            // check if we already have a position to insert
             if (insertPos != -1) break;
         } else {
-            // it is a valid element
-            // is this element minimum?
             if (searchKey < key) {
-                // no minimum to update
                 minimum = -1;
-            } else {
-                // define the desired position
-                if (insertPos == -1) {
-                    insertPos = i;
-                    // check lastGap 
-                    if (lastGap != -1) break;
-                }
+            } else if (insertPos == -1) {
+                insertPos = i;
+                if (lastGap != -1) break;
             }
         }
     }
     
-    // we have to insert at the end of the segment
+    // Handle insertion at end of segment
     if (insertPos == -1) {
-        // if there is no gap, we have to shift the elements
         if (lastGap != storage.segmentCapacity - 1) {
-            // move gap to the right
-//            for (auto i = lastGap; i < storage.segmentCapacity - 1; i++) {
-//                keys[i] = keys[i + 1];
-//                values[i] = values[i + 1];
-//            }
-
             size_t numElements = storage.segmentCapacity - lastGap - 1;
-
-            std::memmove(&keys[lastGap], // destination
-                    &keys[lastGap + 1],  // source
-                    numElements * sizeof(keys[0])); // number of bytes
-
-            std::memmove(&values[lastGap], // destination
-                    &values[lastGap + 1],  // source
-                    numElements * sizeof(values[0])); // number of bytes
+            std::memmove(&keys[lastGap], &keys[lastGap + 1], numElements * sizeof(keys[0]));
+            std::memmove(&values[lastGap], &values[lastGap + 1], numElements * sizeof(values[0]));
         }
         insertPos = storage.segmentCapacity - 1;
     } else if (lastGap < insertPos) {
-        // move gap to the right
-//        for (auto i = lastGap; i < insertPos; i++) {
-//            keys[i] = keys[i + 1];
-//            values[i] = values[i + 1];
-//        }
-
+        // Shift elements right
         size_t numElements = insertPos - lastGap;
         std::memmove(&keys[lastGap], &keys[lastGap + 1], numElements * sizeof(keys[0]));
-
-        // Move values
         std::memmove(&values[lastGap], &values[lastGap + 1], numElements * sizeof(values[0]));
         insertPos--;
     } else if (lastGap > insertPos) {
-        // shift right
-//        for (auto i = lastGap; i > insertPos; i--) {
-//            keys[i] = keys[i - 1];
-//            values[i] = values[i - 1];
-//        }
-
+        // Shift elements left
         size_t numElements = lastGap - insertPos;
         std::memmove(&keys[insertPos + 1], &keys[insertPos], numElements * sizeof(keys[0]));
         std::memmove(&values[insertPos + 1], &values[insertPos], numElements * sizeof(values[0]));
     }
 
+    // Insert new element
     keys[insertPos] = key;
     values[insertPos] = value;
 
-    // update the element count
+    // Update counts
     storage.segmentElementsCount[segmentId]++;
     storage.numElements++;
 
     return minimum;
 }
 
+// ============================================================================
+// Helper Methods
+// ============================================================================
+
 int64_t PackedMemoryArray::getMinimum(uint64_t segmentId) const {
     auto segmentStart = segmentId * storage.segmentCapacity;
     int64_t* keys = storage.keys;
-
-    // search for the first valid element
     while (keys[segmentStart] == -1) segmentStart++;
-
     return keys[segmentStart];
 }
 
@@ -434,7 +348,6 @@ uint64_t PackedMemoryArray::getSegmentCount(uint64_t segmentId) const {
     return storage.segmentElementsCount[segmentId];
 }
 
-// binary search the index
 uint64_t PackedMemoryArray::indexFindLeq(int64_t key) const {
     int64_t left = 0;
     int64_t right = indexVec.size() - 1;
@@ -443,7 +356,6 @@ uint64_t PackedMemoryArray::indexFindLeq(int64_t key) const {
 
     while (left <= right) {
         mid = left + (right - left) / 2;
-
         if (indexVec[mid] <= key) {
             ans = mid;
             left = mid + 1;
@@ -452,10 +364,25 @@ uint64_t PackedMemoryArray::indexFindLeq(int64_t key) const {
         }
     }
 
-    if (ans == -1) return 0;
-
-    return ans;
+    return (ans == -1) ? 0 : ans;
 }
+
+bool PackedMemoryArray::isSorted() {
+    int64_t previousData = -1;
+    for (uint64_t i = 0; i < storage.capacity - 1; i++) {
+        if (storage.keys[i] > 0) {
+            if (storage.keys[i] < previousData) {
+                return false;
+            }
+            previousData = storage.keys[i];
+        }
+    }
+    return true;
+}
+
+// ============================================================================
+// Debug Methods
+// ============================================================================
 
 void PackedMemoryArray::dumpIndex() {
     for (auto i = 0; i < indexVec.size(); i++) {
@@ -486,19 +413,5 @@ void PackedMemoryArray::dump() {
     }
     std::cout << std::endl << std::endl;
 }
-
-bool PackedMemoryArray::isSorted() {
-    int64_t previousData = -1;
-    for (uint64_t i = 0; i < storage.capacity - 1; i++) {
-        if (storage.keys[i] > 0) {
-            if (storage.keys[i] < previousData) {
-                return false;
-            }
-            previousData = storage.keys[i];
-        }
-    }
-    return true;
-}
-
 
 } // namespace pma

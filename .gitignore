@@ -3,3 +3,5 @@ pma
 build/
 tmp/
 old/
+.vscode/
+.DS_Store
