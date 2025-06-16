@@ -1,11 +1,12 @@
 #include <random>
 #include <chrono>
 #include <map>
+#include <iostream>
 
-#include "../include/pma.hpp"
+#include "pma.hpp"
 
 void benchmarkPMA_random() {
-    pma::PackedMemoryArray pma(128);
+    pma::PackedMemoryArray<int, int> pma(128);
     std::vector<int64_t> keys(10000000);
     
     std::mt19937_64 rng(42); // fixed seed for reproducibility
@@ -26,8 +27,8 @@ void benchmarkPMA_random() {
 }
 
 void benchmarkMAP_random() {
-    std::map<int64_t, int64_t> map;
-    std::vector<int64_t> keys(10000000);
+    std::map<int, int> map;
+    std::vector<int> keys(10000000);
 
     std::mt19937_64 rng(42); // fixed seed for reproducibility
     std::uniform_int_distribution<int64_t> dist(0, 1LL << 40);
@@ -48,7 +49,7 @@ void benchmarkMAP_random() {
 
 void benchmarkPMA() {
     uint64_t mid = 0;
-    pma::PackedMemoryArray pma(128 /* initial capacity */);
+    pma::PackedMemoryArray<int, int> pma(64 /* initial capacity */);
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -64,7 +65,7 @@ void benchmarkPMA() {
 }
 
 void benchmarkMAP() {
-    std::map<int64_t, int64_t> map;
+    std::map<int, int> map;
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -80,7 +81,7 @@ void benchmarkMAP() {
 }
 
 int main() {
-    benchmarkPMA();
-//    benchmarkMAP_random();
+    benchmarkMAP_random();
+//    benchmarkPMA_random();
     return 0;
 }
