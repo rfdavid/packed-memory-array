@@ -69,6 +69,10 @@ protected:
     }
 
 public:
+    // Owns raw buffers, so copying would double free them
+    PMA(const PMA&) = delete;
+    PMA& operator=(const PMA&) = delete;
+
     size_t getSize() const {
         return capacity;
     }
@@ -205,6 +209,12 @@ private:
         return (insertPos == 0);
     }
 
+    // After spreading the existing numElements - 1 elements over the window,
+    // the fullest segment must still have a free slot for the new element
+    inline bool hasRoom(size_t numElements, size_t windowLength) const {
+        return numElements - 1 <= windowLength * (this->segmentCapacity - 1);
+    }
+
     int rebalance(uint64_t segmentId, KeyType key, ValueType value);
     int spread(size_t numElements, size_t windowStart, size_t numOfSegments, KeyType key);
     int resize(KeyType key);
@@ -254,11 +264,48 @@ public:
         }
         return true;
     }
+
+    // Verifies sortedness, segment counts and that the index still routes keys correctly
+    bool checkInvariants() const {
+        size_t numOfSegments = this->getNoOfSegments();
+        if (indexVec.size() != numOfSegments) return false;
+
+        KeyType previousKey;
+        bool first = true;
+        size_t total = 0;
+
+        for (size_t s = 0; s < numOfSegments; s++) {
+            // Index must be non-decreasing and not below any key in earlier segments
+            if (s > 0 && indexVec[s] < indexVec[s - 1]) return false;
+            if (!first && indexVec[s] < previousKey) return false;
+
+            size_t count = 0;
+            for (size_t i = s * this->segmentCapacity; i < (s + 1) * this->segmentCapacity; i++) {
+                if (!this->occupied[i]) continue;
+                // Index must not exceed the segment minimum
+                if (count == 0 && this->keys[i] < indexVec[s]) return false;
+                if (!first && this->keys[i] < previousKey) return false;
+                previousKey = this->keys[i];
+                first = false;
+                count++;
+            }
+
+            if (count != getSegmentCount(s)) return false;
+            total += count;
+        }
+
+        return total == this->numElements;
+    }
 };
 
 // Implementation of rebalance
 template <typename KeyType, typename ValueType>
 int PackedMemoryArray<KeyType, ValueType>::rebalance(uint64_t segmentId, KeyType key, ValueType value) {
+    // A single segment has no neighbours to spread into
+    if (this->height == 1) {
+        return resize(key);
+    }
+
     size_t numElements = this->segmentCapacity + 1;
     double rho = 0.0;
     double theta = 1.0;
@@ -293,10 +340,10 @@ int PackedMemoryArray<KeyType, ValueType>::rebalance(uint64_t segmentId, KeyType
         }
 
         density = ((double) numElements) / (windowLength * this->segmentCapacity);
-    } while (density > theta && height < this->height);
+    } while ((density > theta || !hasRoom(numElements, windowLength)) && height < this->height);
 
     // Either spread elements or resize the array
-    if (density <= theta) {
+    if (density <= theta && hasRoom(numElements, windowLength)) {
         return spread(numElements - 1, windowStart, windowLength, key);
     } else {
         return resize(key);

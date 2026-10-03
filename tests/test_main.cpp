@@ -12,6 +12,7 @@ TEST_CASE("Insert sequential elements", "[pma]") {
     }
 
     REQUIRE(pma.isSorted() == true);
+    REQUIRE(pma.checkInvariants() == true);
     REQUIRE(pma.getSize() == 64);
 }
 
@@ -22,6 +23,7 @@ TEST_CASE("Inverse insertion", "[pma]") {
     }
 
     REQUIRE(pma.isSorted() == true);
+    REQUIRE(pma.checkInvariants() == true);
     REQUIRE(pma.getSize() == 256);
 }
 
@@ -32,6 +34,7 @@ TEST_CASE("Insert 10k elements", "[pma]") {
     }
 
     REQUIRE(pma.isSorted() == true);
+    REQUIRE(pma.checkInvariants() == true);
     REQUIRE(pma.getSize() == 16384);
     REQUIRE(pma.getSegmentSize() == 64);
     REQUIRE(pma.getNoOfSegments() == 256);
@@ -50,6 +53,7 @@ TEST_CASE("Insert 100k random big numbers", "[pma]") {
     }
 
     REQUIRE(pma.isSorted() == true);
+    REQUIRE(pma.checkInvariants() == true);
     REQUIRE(pma.getSize() == 131072);
     REQUIRE(pma.getSegmentSize() == 64);
     REQUIRE(pma.getNoOfSegments() == 2048);
@@ -66,4 +70,44 @@ TEST_CASE("Random insert", "[pma]") {
     }
 
     REQUIRE(pma.isSorted() == true);
+    REQUIRE(pma.checkInvariants() == true);
+}
+
+// Inserts n keys from nextKey, checking the PMA invariants along the way
+template <typename KeyGen>
+static void insertAndCheck(size_t segmentSize, int n, KeyGen nextKey) {
+    pma::PackedMemoryArray<int, int> pma(segmentSize);
+    for (int i = 0; i < n; i++) {
+        pma.insertElement(nextKey(i), i);
+        if (i % 500 == 0) {
+            REQUIRE(pma.checkInvariants() == true);
+        }
+    }
+
+    REQUIRE(pma.isSorted() == true);
+    REQUIRE(pma.checkInvariants() == true);
+    REQUIRE(pma.getTotalElements() == n);
+}
+
+TEST_CASE("Descending insert with small segments", "[pma]") {
+    for (size_t segmentSize : {4, 8, 16}) {
+        INFO("segment size " << segmentSize);
+        insertAndCheck(segmentSize, 20000, [](int i) { return 20000 - i; });
+    }
+}
+
+TEST_CASE("Random insert with small segments", "[pma]") {
+    for (size_t segmentSize : {4, 8, 16}) {
+        INFO("segment size " << segmentSize);
+        std::mt19937 eng(42);
+        insertAndCheck(segmentSize, 20000, [&](int) { return (int) (eng() % 1000000000); });
+    }
+}
+
+TEST_CASE("Duplicate keys with small segments", "[pma]") {
+    for (size_t segmentSize : {4, 8, 16}) {
+        INFO("segment size " << segmentSize);
+        std::mt19937 eng(42);
+        insertAndCheck(segmentSize, 20000, [&](int) { return (int) (eng() % 50); });
+    }
 }
