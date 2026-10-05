@@ -2,7 +2,7 @@
 add_library(pma_lib INTERFACE)
 
 # Include headers
-target_include_directories(pma_lib INTERFACE ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(pma_lib INTERFACE ${PROJECT_SOURCE_DIR}/include)
 
 # Add the main executable
 add_executable(pma

@@ -6,7 +6,7 @@
 #include "pma.hpp"
 
 void benchmarkPMA_random() {
-    pma::PackedMemoryArray<int, int> pma(128);
+    pma::PackedMemoryArray<int64_t, int64_t> pma(128);
     std::vector<int64_t> keys(10000000);
     
     std::mt19937_64 rng(42); // fixed seed for reproducibility
@@ -27,8 +27,8 @@ void benchmarkPMA_random() {
 }
 
 void benchmarkMAP_random() {
-    std::map<int, int> map;
-    std::vector<int> keys(10000000);
+    std::map<int64_t, int64_t> map;
+    std::vector<int64_t> keys(10000000);
 
     std::mt19937_64 rng(42); // fixed seed for reproducibility
     std::uniform_int_distribution<int64_t> dist(0, 1LL << 40);

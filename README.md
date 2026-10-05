@@ -27,13 +27,14 @@ The clever part is *how the gaps are managed*.  The array is treated as the leav
 ```cpp
 #include "pma.hpp"
 
-pma<int> v;
-v.insert(10);
-v.insert(5);
-v.insert(20);
+// Keys and values must be trivially copyable; the argument is the segment
+// size (number of slots per segment, between 2 and 32767)
+pma::PackedMemoryArray<int, int> pma(64);
+pma.insertElement(10, 100);
+pma.insertElement(5, 50);
+pma.insertElement(20, 200);
 
-for (int x : v) std::cout << x << ' ';   // prints: 5 10 20
-
+std::cout << pma.getTotalElements();   // prints: 3
 ```
 
 ## Benchmark
@@ -48,5 +49,6 @@ The figure shows throughput (ops/s, higher is better) for random using sequentia
 mkdir build && cd build
 cmake ..  # or cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
-./build/bin/experiment
+./bin/pma     # benchmark (examples/experiment.cpp)
+./bin/tests   # test suite
 ```

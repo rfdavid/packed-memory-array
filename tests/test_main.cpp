@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <list>
 #include <random>
+#include <stdexcept>
 
 #include "pma.hpp"
 
@@ -49,7 +50,7 @@ TEST_CASE("Insert 100k random big numbers", "[pma]") {
     std::uniform_int_distribution<> distr(1, 100000);
 
     for (int i = 0; i < 100000; i++) {
-        pma.insertElement(distr(eng), i*1000000);
+        pma.insertElement(distr(eng), i);
     }
 
     REQUIRE(pma.isSorted() == true);
@@ -110,4 +111,20 @@ TEST_CASE("Duplicate keys with small segments", "[pma]") {
         std::mt19937 eng(42);
         insertAndCheck(segmentSize, 20000, [&](int) { return (int) (eng() % 50); });
     }
+}
+
+TEST_CASE("Smallest segment size", "[pma]") {
+    std::mt19937 eng(42);
+    insertAndCheck(2, 2000, [](int i) { return 2000 - i; });
+    insertAndCheck(2, 2000, [&](int) { return (int) (eng() % 1000000000); });
+    insertAndCheck(2, 2000, [&](int) { return (int) (eng() % 50); });
+}
+
+TEST_CASE("Invalid segment sizes are rejected", "[pma]") {
+    using PMA = pma::PackedMemoryArray<int, int>;
+    REQUIRE_THROWS_AS(PMA(0), std::invalid_argument);
+    REQUIRE_THROWS_AS(PMA(1), std::invalid_argument);
+    REQUIRE_THROWS_AS(PMA(32768), std::invalid_argument);
+    REQUIRE_NOTHROW(PMA(2));
+    REQUIRE_NOTHROW(PMA(32767));
 }

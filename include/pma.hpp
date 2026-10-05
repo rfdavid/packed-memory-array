@@ -14,6 +14,9 @@
 #include <cmath>
 #include <type_traits>
 #include <optional>
+#include <limits>
+#include <new>
+#include <stdexcept>
 
 namespace pma {
 
@@ -32,18 +35,28 @@ protected:
     bool* occupied;
     int16_t* segmentElementsCount;
 
-    void allocSegments(size_t numOfSegments, size_t segmentCapacity, 
-            KeyType** keys, ValueType** values, bool** occupied, int16_t** segmentElementsCount) {
-        *keys = nullptr;
-        *values = nullptr;
-        *occupied = nullptr;
-        *segmentElementsCount = nullptr;
+    // Returns 64-byte aligned memory, or nullptr on failure
+    static void* alignedAlloc(size_t size) {
+        void* ptr = nullptr;
+        if (posix_memalign(&ptr, 64, size) != 0) return nullptr;
+        return ptr;
+    }
 
+    void allocSegments(size_t numOfSegments, size_t segmentCapacity,
+            KeyType** keys, ValueType** values, bool** occupied, int16_t** segmentElementsCount) {
         // Allocate aligned memory for each array
-        posix_memalign((void**) keys, 64, numOfSegments * segmentCapacity * sizeof(KeyType));
-        posix_memalign((void**) values, 64, numOfSegments * segmentCapacity * sizeof(ValueType));
-        posix_memalign((void**) occupied, 64, numOfSegments * segmentCapacity * sizeof(bool));
-        posix_memalign((void**) segmentElementsCount, 64, numOfSegments * sizeof(int16_t));
+        *keys = static_cast<KeyType*>(alignedAlloc(numOfSegments * segmentCapacity * sizeof(KeyType)));
+        *values = static_cast<ValueType*>(alignedAlloc(numOfSegments * segmentCapacity * sizeof(ValueType)));
+        *occupied = static_cast<bool*>(alignedAlloc(numOfSegments * segmentCapacity * sizeof(bool)));
+        *segmentElementsCount = static_cast<int16_t*>(alignedAlloc(numOfSegments * sizeof(int16_t)));
+
+        if (!*keys || !*values || !*occupied || !*segmentElementsCount) {
+            free(*keys);
+            free(*values);
+            free(*occupied);
+            free(*segmentElementsCount);
+            throw std::bad_alloc();
+        }
 
         // Initialize arrays
         memset(*occupied, 0, numOfSegments * segmentCapacity * sizeof(bool));
@@ -51,6 +64,12 @@ protected:
     }
 
     PMA(size_t segmentSize) : segmentCapacity(segmentSize) {
+        // Segment counts are stored as int16_t, and a segment needs at least
+        // two slots so a rebalance can always leave a gap for the new element
+        if (segmentSize < 2 || segmentSize > static_cast<size_t>(std::numeric_limits<int16_t>::max())) {
+            throw std::invalid_argument("PMA segment size must be between 2 and 32767");
+        }
+
         capacity = segmentCapacity;
         height = 1;
         numElements = 0;
@@ -353,15 +372,18 @@ int PackedMemoryArray<KeyType, ValueType>::rebalance(uint64_t segmentId, KeyType
 // Implementation of spread
 template <typename KeyType, typename ValueType>
 int PackedMemoryArray<KeyType, ValueType>::spread(size_t numElements, size_t windowStart, size_t numOfSegments, KeyType key) {
-    KeyType* newKeys;
-    ValueType* newValues;
-    bool* newOccupied;
     int segmentToInsert = windowStart;
 
-    // Allocate temporary arrays
-    posix_memalign((void**)&newKeys, 64, numOfSegments * this->segmentCapacity * sizeof(KeyType));
-    posix_memalign((void**)&newValues, 64, numOfSegments * this->segmentCapacity * sizeof(ValueType));
-    posix_memalign((void**)&newOccupied, 64, numOfSegments * this->segmentCapacity * sizeof(bool));
+    // Allocate temporary arrays before modifying anything
+    KeyType* newKeys = static_cast<KeyType*>(this->alignedAlloc(numOfSegments * this->segmentCapacity * sizeof(KeyType)));
+    ValueType* newValues = static_cast<ValueType*>(this->alignedAlloc(numOfSegments * this->segmentCapacity * sizeof(ValueType)));
+    bool* newOccupied = static_cast<bool*>(this->alignedAlloc(numOfSegments * this->segmentCapacity * sizeof(bool)));
+    if (!newKeys || !newValues || !newOccupied) {
+        free(newKeys);
+        free(newValues);
+        free(newOccupied);
+        throw std::bad_alloc();
+    }
     memset(newOccupied, 0, numOfSegments * this->segmentCapacity * sizeof(bool));
 
     size_t oddSegments = numElements % numOfSegments;
@@ -420,24 +442,25 @@ int PackedMemoryArray<KeyType, ValueType>::spread(size_t numElements, size_t win
 // Implementation of resize
 template <typename KeyType, typename ValueType>
 int PackedMemoryArray<KeyType, ValueType>::resize(KeyType key) {
-    // Calculate new capacity and parameters
-    this->capacity *= 2;
-    size_t numOfSegments = this->capacity / this->segmentCapacity;
+    // Calculate new parameters
+    size_t numOfSegments = 2 * this->capacity / this->segmentCapacity;
     size_t numElements = this->numElements;
     size_t elementsPerSegment = numElements / numOfSegments;
     size_t oddSegments = numElements % numOfSegments;
     int segmentToInsert = 0;
 
-    // Update height
-    this->height = std::log2(this->capacity / this->segmentCapacity) + 1;
-    indexVec.resize(numOfSegments);
-
-    // Allocate new storage
+    // Allocate new storage first, so a failed allocation leaves the PMA unchanged
+    indexVec.reserve(numOfSegments);
     KeyType* oldKeys;
     ValueType* oldValues;
     bool* oldOccupied;
     int16_t* oldElementsCount;
     this->allocSegments(numOfSegments, this->segmentCapacity, &oldKeys, &oldValues, &oldOccupied, &oldElementsCount);
+
+    // Update capacity, height and index size
+    this->capacity *= 2;
+    this->height = std::log2(this->capacity / this->segmentCapacity) + 1;
+    indexVec.resize(numOfSegments);
 
     // Swap old and new storage
     std::swap(oldKeys, this->keys);
